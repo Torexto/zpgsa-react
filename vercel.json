@@ -1,0 +1,8 @@
+{
+	"rewrites": [
+		{
+			"source": "/api/buses",
+			"destination": "http://bielawa.trapeze.fi/bussit/web?command=olmapvehicles&action=getVehicles"
+		}
+	]
+}

@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --popup-background: rgba(0, 0, 0, 0.8);
+}
+
+div.maplibregl-popup.maplibregl-popup-anchor-bottom {
+  /* biome-ignore lint/complexity/noImportantStyles: overwrite library styles */
+  max-width: 400px !important;
+}
+
+.maplibregl-popup-content {
+  background-color: var(--popup-background);
+  padding: 15px;
+  border-radius: 1rem;
+  color: white;
+  font-family: "Roboto", sans-serif;
+  font-weight: 600;
+  text-wrap: nowrap;
+}
+
+div.maplibregl-popup.maplibregl-popup-anchor-bottom > div.maplibregl-popup-tip {
+  border-top-color: var(--popup-background);
+}
+
+.maplibregl-popup-close-button {
+  display: none;
+}
