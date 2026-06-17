@@ -3,6 +3,7 @@ import react, {reactCompilerPreset} from '@vitejs/plugin-react'
 import babel from "@rolldown/plugin-babel"
 import {VitePWA} from "vite-plugin-pwa";
 import tailwindcss from "@tailwindcss/vite";
+import vercel from "vite-plugin-vercel/vite";
 
 export default defineConfig({
   server: {
@@ -21,6 +22,7 @@ export default defineConfig({
       presets: [reactCompilerPreset()],
     }),
     tailwindcss(),
+    vercel(),
 
     VitePWA({
       strategies: "generateSW",
