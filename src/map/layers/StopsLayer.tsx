@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Layer, Source } from "@vis.gl/react-maplibre";
-import type { Stop } from "../types.ts";
+import { Layer, Popup, Source } from "@vis.gl/react-maplibre";
+import type { Stop, StopInfoBus } from "../types.ts";
 
 function StopsBackgroundLayer() {
   return (
@@ -45,7 +45,43 @@ function StopsForegroundLayer() {
   );
 }
 
-export default function StopsLayer() {
+export function StopPopup({
+  stop,
+  onClose,
+  buses,
+}: {
+  stop: Stop;
+  onClose: () => void;
+  buses: StopInfoBus[];
+}) {
+  return (
+    <Popup
+      longitude={stop.lon}
+      latitude={stop.lat}
+      anchor="bottom"
+      offset={15}
+      onClose={onClose}
+    >
+      <div className="text-center font-bold text-[16px] pb-2">
+        {stop.city} {stop.name} ({stop.id})
+      </div>
+      <div className="divide-y divide-white/20">
+        {buses.map((bus, i) => (
+          <div
+            key={i}
+            className="grid grid-cols-[max-content_1fr_max-content] gap-2 items-center whitespace-nowrap py-1 px-2 text-sm"
+          >
+            <div className="text-center w-8">{bus.line}</div>
+            <div>{bus.destination}</div>
+            <div>{bus.time}</div>
+          </div>
+        ))}
+      </div>
+    </Popup>
+  );
+}
+
+export function StopsLayer() {
   const { data: stopsData } = useSuspenseQuery<Stop[]>({
     queryKey: ["stops"],
     queryFn: () => fetch("assets/data/stops.json").then((r) => r.json()),

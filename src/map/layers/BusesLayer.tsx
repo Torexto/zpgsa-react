@@ -1,12 +1,20 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Layer, Source } from "@vis.gl/react-maplibre";
+import { Layer, Popup, Source } from "@vis.gl/react-maplibre";
 import toBus from "../toBus.ts";
 import type { Bus, ZpgsaBus } from "../types.ts";
 
-async function fetchBuses() {
+async function fetchBuses(): Promise<Bus[]> {
   return fetch("/api/buses")
     .then((res) => res.json())
     .then((data: ZpgsaBus[]) => data.map(toBus));
+}
+
+export function getBusesQueryOptions() {
+  return {
+    queryKey: ["buses"],
+    queryFn: fetchBuses,
+    refetchInterval: 3000,
+  };
 }
 
 function BusForegroundLayer() {
@@ -50,7 +58,27 @@ function BusBackgroundLayer() {
   );
 }
 
-function StopsTextLayer() {
+export function BusPopup({ bus, onClose }: { bus: Bus; onClose: () => void }) {
+  return (
+    <Popup
+      longitude={bus.lon}
+      latitude={bus.lat}
+      anchor="bottom"
+      offset={15}
+      onClose={onClose}
+    >
+      <div>
+        <div>
+          Linia {bus.line} | {bus.label}
+        </div>
+        <div>{bus.destination}</div>
+        <div>Odchyłka: {bus.deviation}</div>
+      </div>
+    </Popup>
+  );
+}
+
+function BusTextLayer() {
   return (
     <Layer
       id="buses-marker-text"
@@ -67,12 +95,8 @@ function StopsTextLayer() {
   );
 }
 
-export default function BusesLayer() {
-  const { data: busesData } = useSuspenseQuery<Bus[]>({
-    queryKey: ["buses"],
-    queryFn: fetchBuses,
-    refetchInterval: 3000,
-  });
+export function BusesLayer() {
+  const { data: busesData } = useSuspenseQuery(getBusesQueryOptions());
 
   return (
     <Source
@@ -92,7 +116,7 @@ export default function BusesLayer() {
     >
       <BusBackgroundLayer />
       <BusForegroundLayer />
-      <StopsTextLayer />
+      <BusTextLayer />
     </Source>
   );
 }

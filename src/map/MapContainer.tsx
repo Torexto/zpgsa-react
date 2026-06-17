@@ -1,84 +1,45 @@
+import { useQuery } from "@tanstack/react-query";
 import MapLibre, {
   Layer,
   type MapGeoJSONFeature,
   type MapLayerMouseEvent,
-  Popup,
   Source,
 } from "@vis.gl/react-maplibre";
-
-import "maplibre-gl/dist/maplibre-gl.css";
-
-import { useQuery } from "@tanstack/react-query";
 import type { MapLibreEvent } from "maplibre-gl";
 import { Suspense, useCallback, useState } from "react";
+import "maplibre-gl/dist/maplibre-gl.css";
 import filterStopDetails from "./filterStopDetails.ts";
-import BusesLayer from "./layers/BusesLayer.tsx";
-import StopsLayer from "./layers/StopsLayer.tsx";
+import {
+  BusesLayer,
+  BusPopup,
+  getBusesQueryOptions,
+  StopPopup,
+  StopsLayer,
+} from "./layers";
 import type { Bus, Stop, StopInfoBus } from "./types.ts";
 
-export const layers = ["stops-marker-background", "buses-marker-background"];
+const clickableLayers = ["stops-marker-background", "buses-marker-background"];
 
-function StopPopup({
-  stop,
-  onClose,
-  buses,
-}: {
-  stop: Stop;
-  onClose: () => void;
-  buses: StopInfoBus[];
-}) {
-  const filteredStopInfoBus = filterStopDetails(buses);
-
-  return (
-    <Popup
-      longitude={stop.lon}
-      latitude={stop.lat}
-      anchor="bottom"
-      offset={15}
-      onClose={onClose}
-    >
-      <div className="text-center font-bold text-[16px] pb-2">
-        {stop.city} {stop.name} ({stop.id})
-      </div>
-      <div className="divide-y divide-white/20">
-        {filteredStopInfoBus.map((bus, i) => (
-          <div
-            key={i}
-            className="grid grid-cols-[max-content_1fr_max-content] gap-2 items-center whitespace-nowrap py-1 px-2 text-sm"
-          >
-            <div className="text-center w-8">{bus.line}</div>
-            <div>{bus.destination}</div>
-            <div>{bus.time}</div>
-          </div>
-        ))}
-      </div>
-    </Popup>
+function getMarker(event: MapLayerMouseEvent) {
+  const activeLayers = clickableLayers.filter(
+    (layerId) => event.target.getLayer(layerId) !== undefined,
   );
-}
+  if (!activeLayers.length) return;
 
-function BusPopup({ bus, onClose }: { bus: Bus; onClose: () => void }) {
-  return (
-    <Popup
-      longitude={bus.lon}
-      latitude={bus.lat}
-      anchor="bottom"
-      offset={15}
-      onClose={onClose}
-    >
-      <div>
-        <div>
-          Linia {bus.line} | {bus.label}
-        </div>
-        <div>{bus.destination}</div>
-        <div>Odchyłka: {bus.deviation}</div>
-      </div>
-    </Popup>
-  );
+  const features = event.target.queryRenderedFeatures(event.point, {
+    layers: clickableLayers,
+  });
+  if (!features.length) return;
+
+  return features[0];
 }
 
 export default function MapContainer() {
   const [stopPopup, setStopPopup] = useState<Stop | null>(null);
-  const [busPopup, setBusPopup] = useState<Bus | null>(null);
+  const [busPopupId, setBusPopupId] = useState<string | null>(null);
+
+  const { data: busesData } = useQuery(getBusesQueryOptions());
+  const busPopup = busesData?.find((bus) => bus.id === busPopupId) ?? null;
 
   const {
     data: stopInfoData,
@@ -121,34 +82,52 @@ export default function MapContainer() {
 
   const handleBus = (feature: MapGeoJSONFeature) => {
     const bus = feature.properties as Bus;
-    setBusPopup(bus);
+    setBusPopupId(bus.id);
+  };
+
+  const handleStopContextMenu = (feature: MapGeoJSONFeature) => {
+    const stop = feature.properties as Stop;
+    window.open(stop.href);
+  };
+
+  const handleBusContextMenu = (feature: MapGeoJSONFeature) => {
+    const bus = feature.properties as Bus;
+    console.log(bus); // TODO: routes
   };
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
-    const activeLayers = layers.filter(
-      (layerId) => event.target.getLayer(layerId) !== undefined,
-    );
-
-    if (!activeLayers.length) return;
-
-    const features = event.target.queryRenderedFeatures(event.point, {
-      layers,
-    });
-
-    if (!features.length) return;
-
-    const clickedFeature = features[0];
-    const layerId = clickedFeature.layer.id;
+    const clickedFeature = getMarker(event);
+    if (!clickedFeature) return;
 
     if (clickedFeature.properties?.cluster) {
       handleCluster(clickedFeature, event);
       return;
     }
 
+    const layerId = clickedFeature.layer.id;
+
     if (layerId === "stops-marker-background") {
       handleStop(clickedFeature);
     } else if (layerId === "buses-marker-background") {
       handleBus(clickedFeature);
+    }
+  };
+
+  const handleMapContextMenu = (event: MapLayerMouseEvent) => {
+    const clickedFeature = getMarker(event);
+    if (!clickedFeature) return;
+
+    if (clickedFeature.properties?.cluster) {
+      handleCluster(clickedFeature, event);
+      return;
+    }
+
+    const layerId = clickedFeature.layer.id;
+
+    if (layerId === "stops-marker-background") {
+      handleStopContextMenu(clickedFeature);
+    } else if (layerId === "buses-marker-background") {
+      handleBusContextMenu(clickedFeature);
     }
   };
 
@@ -161,19 +140,19 @@ export default function MapContainer() {
       }}
       style={{ width: "100vw", height: "100vh" }}
       onMouseMove={(e) => {
-        const activeLayers = layers.filter(
+        const activeLayers = clickableLayers.filter(
           (layerId) => e.target.getLayer(layerId) !== undefined,
         );
 
         if (!activeLayers.length) return;
 
         const features = e.target.queryRenderedFeatures(e.point, {
-          layers,
+          layers: clickableLayers,
         });
         e.target.getCanvas().style.cursor = features.length ? "pointer" : "";
       }}
       onClick={handleMapClick}
-      onContextMenu={handleMapClick}
+      onContextMenu={handleMapContextMenu}
       onLoad={handleMapLoad}
     >
       <Source
@@ -198,12 +177,16 @@ export default function MapContainer() {
         <StopPopup
           stop={stopPopup}
           onClose={() => setStopPopup(null)}
-          buses={!isPending && !error ? stopInfoData[stopPopup.id] : []}
+          buses={
+            !isPending && !error
+              ? filterStopDetails(stopInfoData[stopPopup.id])
+              : []
+          }
         />
       )}
 
       {busPopup && (
-        <BusPopup bus={busPopup} onClose={() => setBusPopup(null)} />
+        <BusPopup bus={busPopup} onClose={() => setBusPopupId(null)} />
       )}
     </MapLibre>
   );
