@@ -1,0 +1,27 @@
+{
+  "version": 3,
+  "routes": [
+    {
+      "src": "^(?:/(.*))$",
+      "headers": {
+        "x-original-path": "/$1"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/(?:(.+)/)?index(?:\\.html)?/?$",
+      "headers": {
+        "Location": "/$1"
+      },
+      "status": 308
+    },
+    {
+      "src": "^/(.*)\\.html/?$",
+      "headers": {
+        "Location": "/$1"
+      },
+      "status": 308
+    }
+  ],
+  "overrides": {}
+}
