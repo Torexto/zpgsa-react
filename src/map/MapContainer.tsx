@@ -13,6 +13,7 @@ import {
   BusesLayer,
   BusPopup,
   getBusesQueryOptions,
+  RouteLayer,
   StopPopup,
   StopsLayer,
 } from "./layers";
@@ -37,6 +38,7 @@ function getMarker(event: MapLayerMouseEvent) {
 export default function MapContainer() {
   const [stopPopup, setStopPopup] = useState<Stop | null>(null);
   const [busPopupId, setBusPopupId] = useState<string | null>(null);
+  const [routeBus, setRouteBus] = useState<Bus | null>(null);
 
   const { data: busesData } = useQuery(getBusesQueryOptions());
   const busPopup = busesData?.find((bus) => bus.id === busPopupId) ?? null;
@@ -92,7 +94,7 @@ export default function MapContainer() {
 
   const handleBusContextMenu = (feature: MapGeoJSONFeature) => {
     const bus = feature.properties as Bus;
-    console.log(bus); // TODO: routes
+    setRouteBus((current) => (current?.id === bus.id ? null : bus));
   };
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
@@ -171,6 +173,10 @@ export default function MapContainer() {
 
       <Suspense fallback={null}>
         <BusesLayer />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <RouteLayer bus={routeBus} />
       </Suspense>
 
       {stopPopup && (
