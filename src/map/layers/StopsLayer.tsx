@@ -15,7 +15,7 @@ function StopsBackgroundLayer() {
         "text-ignore-placement": true,
         "text-anchor": "center",
         "text-justify": "center",
-        "text-offset": [0, -0.1],
+        "text-offset": [0, 0],
       }}
       paint={{
         "text-color": "dodgerblue",
