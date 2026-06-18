@@ -53,6 +53,7 @@ function BusBackgroundLayer() {
         "circle-radius": 16,
         "circle-stroke-color": "white",
         "circle-stroke-width": 1,
+        "circle-opacity": 1,
       }}
     />
   );
