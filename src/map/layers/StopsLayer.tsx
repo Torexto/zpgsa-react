@@ -82,14 +82,14 @@ export function StopPopup({
 }
 
 export function StopsLayer() {
-  const { data: stopsData } = useSuspenseQuery<Stop[]>({
+  const { data } = useSuspenseQuery<Stop[]>({
     queryKey: ["stops"],
     queryFn: () => fetch("assets/data/stops.json").then((r) => r.json()),
   });
 
   const stopsDataFeature = {
     type: "FeatureCollection",
-    features: stopsData.map((stop) => ({
+    features: (data || []).map((stop) => ({
       type: "Feature",
       geometry: {
         type: "Point",

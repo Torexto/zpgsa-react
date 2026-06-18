@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Layer, Popup, Source } from "@vis.gl/react-maplibre";
 import toBus from "../toBus.ts";
 import type { Bus, ZpgsaBus } from "../types.ts";
@@ -97,7 +97,7 @@ function BusTextLayer() {
 }
 
 export function BusesLayer() {
-  const { data: busesData } = useSuspenseQuery(getBusesQueryOptions());
+  const { data } = useQuery(getBusesQueryOptions());
 
   return (
     <Source
@@ -105,7 +105,7 @@ export function BusesLayer() {
       type="geojson"
       data={{
         type: "FeatureCollection",
-        features: busesData.map((bus) => ({
+        features: (data || []).map((bus) => ({
           type: "Feature",
           geometry: {
             type: "Point",

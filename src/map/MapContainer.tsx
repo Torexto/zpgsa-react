@@ -38,10 +38,12 @@ function getMarker(event: MapLayerMouseEvent) {
 export default function MapContainer() {
   const [stopPopup, setStopPopup] = useState<Stop | null>(null);
   const [busPopupId, setBusPopupId] = useState<string | null>(null);
-  const [routeBus, setRouteBus] = useState<Bus | null>(null);
+  const [routeBusId, setRouteBusId] = useState<string | null>(null);
 
   const { data: busesData } = useQuery(getBusesQueryOptions());
   const busPopup = busesData?.find((bus) => bus.id === busPopupId) ?? null;
+  const routeBus =
+    (routeBusId && busesData?.find((bus) => bus.id === routeBusId)) || null;
 
   const {
     data: stopInfoData,
@@ -94,7 +96,7 @@ export default function MapContainer() {
 
   const handleBusContextMenu = (feature: MapGeoJSONFeature) => {
     const bus = feature.properties as Bus;
-    setRouteBus((current) => (current?.id === bus.id ? null : bus));
+    setRouteBusId((current) => (current === bus.id ? null : bus.id));
   };
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
@@ -167,13 +169,9 @@ export default function MapContainer() {
         <Layer id="osm-layer" type="raster" />
       </Source>
 
-      <Suspense fallback={null}>
-        <StopsLayer />
-      </Suspense>
+      <StopsLayer />
 
-      <Suspense fallback={null}>
-        <BusesLayer />
-      </Suspense>
+      <BusesLayer />
 
       <Suspense fallback={null}>
         <RouteLayer bus={routeBus} />
