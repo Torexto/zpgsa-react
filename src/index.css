@@ -4,6 +4,19 @@
   --popup-background: rgba(0, 0, 0, 0.8);
 }
 
+/* Prevent iOS long-press from showing the native callout/menu
+   over map markers so our app-level long-press handler can run. */
+.maplibregl-canvas-container,
+.maplibregl-canvas {
+  /* biome-ignore lint/complexity/noImportantStyles: required to defeat UA defaults */
+  -webkit-touch-callout: none !important;
+  /* biome-ignore lint/complexity/noImportantStyles: required to defeat UA defaults */
+  -webkit-user-select: none !important;
+  user-select: none;
+  /* biome-ignore lint/complexity/noImportantStyles: required to defeat UA defaults */
+  -webkit-tap-highlight-color: transparent !important;
+}
+
 div.maplibregl-popup.maplibregl-popup-anchor-bottom {
   /* biome-ignore lint/complexity/noImportantStyles: overwrite library styles */
   max-width: 400px !important;

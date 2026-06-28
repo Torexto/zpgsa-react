@@ -3,10 +3,11 @@ import MapLibre, {
   Layer,
   type MapGeoJSONFeature,
   type MapLayerMouseEvent,
+  type MapLayerTouchEvent,
   Source,
 } from "@vis.gl/react-maplibre";
 import type { MapLibreEvent } from "maplibre-gl";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import filterStopDetails from "./filterStopDetails.ts";
 import {
@@ -39,6 +40,10 @@ export default function MapContainer() {
   const [stopPopup, setStopPopup] = useState<Stop | null>(null);
   const [busPopupId, setBusPopupId] = useState<string | null>(null);
   const [routeBusId, setRouteBusId] = useState<string | null>(null);
+
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressNextClickRef = useRef(false);
 
   const { data: busesData } = useQuery(getBusesQueryOptions());
   const busPopup = busesData?.find((bus) => bus.id === busPopupId) ?? null;
@@ -100,6 +105,11 @@ export default function MapContainer() {
   };
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false;
+      return;
+    }
+
     const clickedFeature = getMarker(event);
     if (!clickedFeature) return;
 
@@ -135,6 +145,60 @@ export default function MapContainer() {
     }
   };
 
+  const LONG_PRESS_MS = 500;
+  const LONG_PRESS_MOVE_THRESHOLD_PX = 10;
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    longPressStartRef.current = null;
+  }, []);
+
+  // Clear any pending long-press timer on unmount.
+  useEffect(() => cancelLongPress, [cancelLongPress]);
+
+  const triggerContextMenuAction = (event: MapLayerTouchEvent) => {
+    cancelLongPress();
+    suppressNextClickRef.current = true;
+    event.preventDefault();
+    handleMapContextMenu(event as unknown as MapLayerMouseEvent);
+  };
+
+  const handleTouchStart = (event: MapLayerTouchEvent) => {
+    const feature = getMarker(event as unknown as MapLayerMouseEvent);
+    if (!feature) return;
+
+    const touch = event.originalEvent.touches[0];
+    if (!touch) return;
+
+    cancelLongPress();
+    longPressStartRef.current = { x: touch.clientX, y: touch.clientY };
+    longPressTimerRef.current = window.setTimeout(
+      () => triggerContextMenuAction(event),
+      LONG_PRESS_MS,
+    );
+  };
+
+  const handleTouchMove = (event: MapLayerTouchEvent) => {
+    if (longPressTimerRef.current === null) return;
+
+    const start = longPressStartRef.current;
+    const touch = event.originalEvent.touches[0];
+    if (!start || !touch) return;
+
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (dx * dx + dy * dy > LONG_PRESS_MOVE_THRESHOLD_PX ** 2) {
+      cancelLongPress();
+    }
+  };
+
+  const handleTouchEndOrCancel = () => {
+    cancelLongPress();
+  };
+
   return (
     <MapLibre
       initialViewState={{
@@ -158,6 +222,10 @@ export default function MapContainer() {
       onClick={handleMapClick}
       onContextMenu={handleMapContextMenu}
       onLoad={handleMapLoad}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEndOrCancel}
+      onTouchCancel={handleTouchEndOrCancel}
     >
       <Source
         id="osm-tiles"
