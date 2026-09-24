@@ -22,6 +22,16 @@ import type { Bus, Stop, StopInfoBus } from "./types.ts";
 
 const clickableLayers = ["stops-marker-background", "buses-marker-background"];
 
+function useGeolocation() {
+  const [location, setLocation] = useState<GeolocationCoordinates>();
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(({coords}) => setLocation(coords))
+  }, []);
+
+  return location;
+}
+
 function getMarker(event: MapLayerMouseEvent) {
   const activeLayers = clickableLayers.filter(
     (layerId) => event.target.getLayer(layerId) !== undefined,
@@ -37,6 +47,7 @@ function getMarker(event: MapLayerMouseEvent) {
 }
 
 export default function MapContainer() {
+  const location = useGeolocation();
   const [stopPopup, setStopPopup] = useState<Stop | null>(null);
   const [busPopupId, setBusPopupId] = useState<string | null>(null);
   const [routeBusId, setRouteBusId] = useState<string | null>(null);
@@ -202,8 +213,8 @@ export default function MapContainer() {
   return (
     <MapLibre
       initialViewState={{
-        longitude: 16.63,
-        latitude: 50.71,
+        longitude: location?.longitude || 16.63,
+        latitude: location?.latitude || 50.71,
         zoom: 13,
       }}
       style={{ width: "100vw", height: "100vh" }}
