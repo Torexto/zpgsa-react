@@ -164,12 +164,12 @@ const matchesSchoolRestriction = (
   return true;
 };
 
-const busDateTime = (bus: StopInfoBus, date: DateTime): DateTime | null => {
+const busDateTime = (bus: StopInfoBus, date: DateTime) => {
   const t = DateTime.fromFormat(bus.time.trim(), "HH:mm", {
     zone: date.zone,
   });
 
-  if (!t.isValid) return null;
+  if (!t.isValid) throw new Error("Invalid time format");
 
   return t.set({
     year: date.year,
@@ -191,13 +191,12 @@ export function filterBusForDay(
       if (!matchesSchoolRestriction(bus, date)) return null;
 
       const dt = busDateTime(bus, date);
-      if (!dt) return null;
 
       if (today && dt < date) return null;
       return { bus, dt };
     })
-    .filter(Boolean)
-    .sort((a, b) => a?.dt?.toMillis() - b?.dt?.toMillis())
+    .filter((obj) => obj !== null)
+    .sort((a, b) => a.dt.toMillis() - b.dt.toMillis())
     .map((e) => e?.bus);
 }
 
