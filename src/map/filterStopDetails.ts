@@ -197,8 +197,8 @@ export function filterBusForDay(
       return { bus, dt };
     })
     .filter(Boolean)
-    .sort((a, b) => a!.dt!.toMillis() - b!.dt!.toMillis())
-    .map((e) => e!.bus);
+    .sort((a, b) => a?.dt?.toMillis() - b?.dt?.toMillis())
+    .map((e) => e?.bus);
 }
 
 export default function filterStopDetails(

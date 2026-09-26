@@ -10,7 +10,11 @@ function fetchRoutes(): Promise<Record<string, Route>> {
   return fetch("/assets/data/routes.json").then((r) => r.json());
 }
 
-function buildRouteFeature(bus: Bus, stops: Stop[], routes: Record<string, Route>) {
+function buildRouteFeature(
+  bus: Bus,
+  stops: Stop[],
+  routes: Record<string, Route>,
+) {
   const route = routes[bus.route]?.details ?? [];
   const currentIndex = route.indexOf(bus.latestRouteStop);
   const remaining = currentIndex === -1 ? route : route.slice(currentIndex + 1);

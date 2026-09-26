@@ -9,6 +9,7 @@ import MapLibre, {
 import type { MapLibreEvent } from "maplibre-gl";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { useGeolocation } from "react-use";
 import filterStopDetails from "./filterStopDetails.ts";
 import {
   BusesLayer,
@@ -21,16 +22,6 @@ import {
 import type { Bus, Stop, StopInfoBus } from "./types.ts";
 
 const clickableLayers = ["stops-marker-background", "buses-marker-background"];
-
-function useGeolocation() {
-  const [location, setLocation] = useState<GeolocationCoordinates>();
-
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(({coords}) => setLocation(coords))
-  }, []);
-
-  return location;
-}
 
 function getMarker(event: MapLayerMouseEvent) {
   const activeLayers = clickableLayers.filter(
@@ -213,8 +204,8 @@ export default function MapContainer() {
   return (
     <MapLibre
       initialViewState={{
-        longitude: location?.longitude || 16.63,
-        latitude: location?.latitude || 50.71,
+        longitude: location.longitude || 16.63,
+        latitude: location.latitude || 50.71,
         zoom: 13,
       }}
       style={{ width: "100vw", height: "100vh" }}
