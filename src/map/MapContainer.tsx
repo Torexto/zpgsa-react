@@ -4,6 +4,7 @@ import MapLibre, {
   type MapGeoJSONFeature,
   type MapLayerMouseEvent,
   type MapLayerTouchEvent,
+  type MapRef,
   Source,
 } from "@vis.gl/react-maplibre";
 import type { MapLibreEvent } from "maplibre-gl";
@@ -38,6 +39,8 @@ function getMarker(event: MapLayerMouseEvent) {
 }
 
 export default function MapContainer() {
+  const mapRef = useRef<MapRef | null>(null);
+  const hasCenteredOnUser = useRef(false);
   const location = useGeolocation();
   const [stopPopup, setStopPopup] = useState<Stop | null>(null);
   const [busPopupId, setBusPopupId] = useState<string | null>(null);
@@ -201,8 +204,19 @@ export default function MapContainer() {
     cancelLongPress();
   };
 
+  useEffect(() => {
+    if (location.latitude && location.longitude && !hasCenteredOnUser.current) {
+      mapRef.current?.flyTo({
+        center: [location.longitude, location.latitude],
+        zoom: 13,
+      });
+      hasCenteredOnUser.current = true;
+    }
+  }, [location.latitude, location.longitude]);
+
   return (
     <MapLibre
+      ref={mapRef}
       initialViewState={{
         longitude: location.longitude || 16.63,
         latitude: location.latitude || 50.71,
