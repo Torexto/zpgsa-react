@@ -8,21 +8,34 @@ import MapLibre, {
   Source,
 } from "@vis.gl/react-maplibre";
 import type { MapLibreEvent } from "maplibre-gl";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { signal } from "@preact/signals-react";
 import { useGeolocation } from "react-use";
+import { getBusesQueryOptions, getStopInfoOptions } from "../lib/api.ts";
+import { handleCluster } from "../lib/utils/map.ts";
 import filterStopDetails from "./filterStopDetails.ts";
 import {
   BusesLayer,
   BusPopup,
-  getBusesQueryOptions,
   RouteLayer,
   StopPopup,
   StopsLayer,
 } from "./layers";
-import type { Bus, Stop, StopInfoBus } from "./types.ts";
+import type { Bus, Stop } from "./types.ts";
 
 const clickableLayers = ["stops-marker-background", "buses-marker-background"];
+
+// Map events
+type Handler = (arg0: MapGeoJSONFeature) => void;
+type HandlerRegistry = Record<string, Handler>;
+
+export const mapClickHandlers: HandlerRegistry = {};
+export const mapContextMenuHandlers: HandlerRegistry = {};
+
+// Map loaders
+type MapLoader = (arg0: MapLibreEvent) => void;
+export const mapLoadedHandlers: MapLoader[] = [];
 
 function getMarker(event: MapLayerMouseEvent) {
   const activeLayers = clickableLayers.filter(
@@ -38,65 +51,61 @@ function getMarker(event: MapLayerMouseEvent) {
   return features[0];
 }
 
+const loadBusIcon = (event: MapLibreEvent) => {
+  const map = event.target;
+
+  const imageUrl = "/assets/img/bus.png";
+
+  map.loadImage(imageUrl).then((image) => {
+    if (!map.hasImage("bus-icon")) {
+      map.addImage("bus-icon", image.data);
+    }
+  });
+};
+
+const goToUserLocation = (map: MapRef, longitude: number, latitude: number) => {
+  if (latitude && longitude) {
+    map.flyTo({
+      center: [longitude, latitude],
+      zoom: 13,
+    });
+  }
+};
+
+const MapSignal = signal<MapRef | null>(null);
+
+export const currentStop = signal<Stop | null>(null);
+export const currentBusId = signal<string | null>(null);
+export const currentRouteBusId = signal<string | null>(null);
+
 export default function MapContainer() {
-  const mapRef = useRef<MapRef | null>(null);
-  const hasCenteredOnUser = useRef(false);
   const location = useGeolocation();
-  const [stopPopup, setStopPopup] = useState<Stop | null>(null);
-  const [busPopupId, setBusPopupId] = useState<string | null>(null);
-  const [routeBusId, setRouteBusId] = useState<string | null>(null);
 
   const longPressTimerRef = useRef<number | null>(null);
   const longPressStartRef = useRef<{ x: number; y: number } | null>(null);
   const suppressNextClickRef = useRef(false);
 
   const { data: busesData } = useQuery(getBusesQueryOptions());
-  const busPopup = busesData?.find((bus) => bus.id === busPopupId) ?? null;
+  const busPopup =
+    busesData?.find((bus) => bus.id === currentBusId.value) ?? null;
   const routeBus =
-    (routeBusId && busesData?.find((bus) => bus.id === routeBusId)) || null;
+    (currentRouteBusId.value &&
+      busesData?.find((bus) => bus.id === currentRouteBusId.value)) ||
+    null;
 
   const {
     data: stopInfoData,
     isPending,
     error,
-  } = useQuery<Record<string, StopInfoBus[]>>({
-    queryKey: ["stops-info"],
-    queryFn: () =>
-      fetch("/assets/data/stop_details.json").then((r) => r.json()),
-  });
-
-  const handleMapLoad = useCallback((event: MapLibreEvent) => {
-    const map = event.target;
-
-    const imageUrl = "/assets/img/bus.png";
-
-    map.loadImage(imageUrl).then((image) => {
-      map.addImage("bus-icon", image.data);
-    });
-  }, []);
-
-  const handleCluster = (
-    feature: MapGeoJSONFeature,
-    event: MapLayerMouseEvent,
-  ) => {
-    const coordinates = feature.geometry.coordinates;
-    const zoom = event.target.getZoom();
-
-    event.target.easeTo({
-      center: coordinates,
-      zoom: zoom + 2,
-      duration: 400,
-    });
-  };
+  } = useQuery(getStopInfoOptions());
 
   const handleStop = (feature: MapGeoJSONFeature) => {
-    const stop = feature.properties as Stop;
-    setStopPopup(stop);
+    currentStop.value = feature.properties as Stop;
   };
 
   const handleBus = (feature: MapGeoJSONFeature) => {
     const bus = feature.properties as Bus;
-    setBusPopupId(bus.id);
+    currentBusId.value = bus.id;
   };
 
   const handleStopContextMenu = (feature: MapGeoJSONFeature) => {
@@ -106,7 +115,14 @@ export default function MapContainer() {
 
   const handleBusContextMenu = (feature: MapGeoJSONFeature) => {
     const bus = feature.properties as Bus;
-    setRouteBusId((current) => (current === bus.id ? null : bus.id));
+    currentRouteBusId.value =
+      currentRouteBusId.value !== bus.id ? bus.id : null;
+  };
+
+  const handleMapLoad = (event: MapLibreEvent) => {
+    for (const handler of mapLoadedHandlers) {
+      handler(event);
+    }
   };
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
@@ -125,10 +141,10 @@ export default function MapContainer() {
 
     const layerId = clickedFeature.layer.id;
 
-    if (layerId === "stops-marker-background") {
-      handleStop(clickedFeature);
-    } else if (layerId === "buses-marker-background") {
-      handleBus(clickedFeature);
+    const handler = mapClickHandlers[layerId];
+
+    if (handler) {
+      handler(clickedFeature);
     }
   };
 
@@ -143,10 +159,10 @@ export default function MapContainer() {
 
     const layerId = clickedFeature.layer.id;
 
-    if (layerId === "stops-marker-background") {
-      handleStopContextMenu(clickedFeature);
-    } else if (layerId === "buses-marker-background") {
-      handleBusContextMenu(clickedFeature);
+    const handler = mapContextMenuHandlers[layerId];
+
+    if (handler) {
+      handler(clickedFeature);
     }
   };
 
@@ -161,7 +177,6 @@ export default function MapContainer() {
     longPressStartRef.current = null;
   }, []);
 
-  // Clear any pending long-press timer on unmount.
   useEffect(() => cancelLongPress, [cancelLongPress]);
 
   const triggerContextMenuAction = (event: MapLayerTouchEvent) => {
@@ -204,37 +219,47 @@ export default function MapContainer() {
     cancelLongPress();
   };
 
+  const handleMouseMove = (e: MapLayerMouseEvent) => {
+    const activeLayers = clickableLayers.filter(
+      (layerId) => e.target.getLayer(layerId) !== undefined,
+    );
+
+    if (!activeLayers.length) return;
+
+    const features = e.target.queryRenderedFeatures(e.point, {
+      layers: activeLayers,
+    });
+    e.target.getCanvas().style.cursor = features.length ? "pointer" : "";
+  };
+
+  // Go to user location after map load
   useEffect(() => {
-    if (location.latitude && location.longitude && !hasCenteredOnUser.current) {
-      mapRef.current?.flyTo({
-        center: [location.longitude, location.latitude],
-        zoom: 13,
-      });
-      hasCenteredOnUser.current = true;
-    }
+    if (!MapSignal.value || !location.latitude || !location.longitude) return;
+    goToUserLocation(MapSignal.value, location.longitude, location.latitude);
   }, [location.latitude, location.longitude]);
+
+  // Register event handlers
+  mapClickHandlers["stops-marker-background"] = handleStop;
+  mapClickHandlers["buses-marker-background"] = handleBus;
+
+  mapContextMenuHandlers["stops-marker-background"] = handleStopContextMenu;
+  mapContextMenuHandlers["buses-marker-background"] = handleBusContextMenu;
+
+  // Register map loaders
+  mapLoadedHandlers.push(loadBusIcon);
 
   return (
     <MapLibre
-      ref={mapRef}
+      ref={(instance) => {
+        if (instance) MapSignal.value = instance;
+      }}
       initialViewState={{
-        longitude: location.longitude || 16.63,
-        latitude: location.latitude || 50.71,
+        longitude: 16.63,
+        latitude: 50.71,
         zoom: 13,
       }}
       style={{ width: "100vw", height: "100vh" }}
-      onMouseMove={(e) => {
-        const activeLayers = clickableLayers.filter(
-          (layerId) => e.target.getLayer(layerId) !== undefined,
-        );
-
-        if (!activeLayers.length) return;
-
-        const features = e.target.queryRenderedFeatures(e.point, {
-          layers: clickableLayers,
-        });
-        e.target.getCanvas().style.cursor = features.length ? "pointer" : "";
-      }}
+      onMouseMove={handleMouseMove}
       onClick={handleMapClick}
       onContextMenu={handleMapContextMenu}
       onLoad={handleMapLoad}
@@ -257,24 +282,22 @@ export default function MapContainer() {
 
       <BusesLayer />
 
-      <Suspense fallback={null}>
-        <RouteLayer bus={routeBus} />
-      </Suspense>
+      <RouteLayer bus={routeBus} />
 
-      {stopPopup && (
+      {currentStop.value && (
         <StopPopup
-          stop={stopPopup}
-          onClose={() => setStopPopup(null)}
+          stop={currentStop.value}
+          onClose={() => (currentStop.value = null)}
           buses={
-            !isPending && !error
-              ? filterStopDetails(stopInfoData[stopPopup.id])
+            !isPending && !error && stopInfoData
+              ? filterStopDetails(stopInfoData[currentStop.value.id] ?? [])
               : []
           }
         />
       )}
 
       {busPopup && (
-        <BusPopup bus={busPopup} onClose={() => setBusPopupId(null)} />
+        <BusPopup bus={busPopup} onClose={() => (currentBusId.value = null)} />
       )}
     </MapLibre>
   );

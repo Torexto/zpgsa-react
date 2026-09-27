@@ -1,21 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Layer, Popup, Source } from "@vis.gl/react-maplibre";
-import toBus from "../toBus.ts";
-import type { Bus, ZpgsaBus } from "../types.ts";
-
-async function fetchBuses(): Promise<Bus[]> {
-  return fetch("/api/buses")
-    .then((res) => res.json())
-    .then((data: ZpgsaBus[]) => data.map(toBus));
-}
-
-export function getBusesQueryOptions() {
-  return {
-    queryKey: ["buses"],
-    queryFn: fetchBuses,
-    refetchInterval: 3000,
-  };
-}
+import { getBusesQueryOptions } from "../../lib/api.ts";
+import type { Bus } from "../types.ts";
 
 function BusForegroundLayer() {
   return (

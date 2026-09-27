@@ -1,14 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Layer, Source } from "@vis.gl/react-maplibre";
+import { getRoutesQueryOptions, getStopsQueryOptions } from "../../lib/api.ts";
 import type { Bus, Route, Stop } from "../types.ts";
-
-function fetchStops(): Promise<Stop[]> {
-  return fetch("/assets/data/stops.json").then((r) => r.json());
-}
-
-function fetchRoutes(): Promise<Record<string, Route>> {
-  return fetch("/assets/data/routes.json").then((r) => r.json());
-}
 
 function buildRouteFeature(
   bus: Bus,
@@ -25,7 +18,6 @@ function buildRouteFeature(
     .filter((stop): stop is Stop => Boolean(stop))
     .map((stop) => [stop.lon, stop.lat] as [number, number]);
 
-  // Start from the bus's current position so the line connects to it.
   const fullPath: [number, number][] = [[bus.lon, bus.lat], ...coordinates];
 
   if (fullPath.length < 2) return null;
@@ -41,14 +33,8 @@ function buildRouteFeature(
 }
 
 export function RouteLayer({ bus }: { bus: Bus | null }) {
-  const { data: stops } = useSuspenseQuery<Stop[]>({
-    queryKey: ["stops"],
-    queryFn: fetchStops,
-  });
-  const { data: routes } = useSuspenseQuery<Record<string, Route>>({
-    queryKey: ["routes"],
-    queryFn: fetchRoutes,
-  });
+  const { data: stops } = useSuspenseQuery(getStopsQueryOptions());
+  const { data: routes } = useSuspenseQuery(getRoutesQueryOptions());
 
   if (!bus) return null;
 

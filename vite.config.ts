@@ -19,6 +19,7 @@ export default defineConfig({
     react(),
     babel({
       presets: [reactCompilerPreset()],
+      plugins: ["module:@preact/signals-react-transform"],
     }),
     tailwindcss(),
 

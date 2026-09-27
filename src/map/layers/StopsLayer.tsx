@@ -1,5 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Layer, Popup, Source } from "@vis.gl/react-maplibre";
+import { useEffect } from "react";
+import { getStopsQueryOptions } from "../../lib/api.ts";
 import type { Stop, StopInfoBus } from "../types.ts";
 
 function StopsBackgroundLayer() {
@@ -83,10 +85,7 @@ export function StopPopup({
 }
 
 export function StopsLayer() {
-  const { data } = useSuspenseQuery<Stop[]>({
-    queryKey: ["stops"],
-    queryFn: () => fetch("assets/data/stops.json").then((r) => r.json()),
-  });
+  const { data } = useSuspenseQuery(getStopsQueryOptions());
 
   const stopsDataFeature = {
     type: "FeatureCollection",
