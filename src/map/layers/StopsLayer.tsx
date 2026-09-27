@@ -1,8 +1,18 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { Layer, Popup, Source } from "@vis.gl/react-maplibre";
-import { useEffect } from "react";
-import { getStopsQueryOptions } from "../../lib/api.ts";
-import type { Stop, StopInfoBus } from "../types.ts";
+import { computed, signal } from "@preact/signals-react";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  Layer,
+  type MapGeoJSONFeature,
+  Popup,
+  Source,
+} from "@vis.gl/react-maplibre";
+import { getStopInfoOptions, getStopsQueryOptions } from "../../lib/api.ts";
+import filterStopDetails from "../filterStopDetails.ts";
+import {
+  mapClickHandlers,
+  mapSecondaryClickHandlers,
+} from "../MapContainer.tsx";
+import type { Stop } from "../types.ts";
 
 function StopsBackgroundLayer() {
   return (
@@ -48,28 +58,55 @@ function StopsForegroundLayer() {
   );
 }
 
-export function StopPopup({
-  stop,
-  onClose,
-  buses,
-}: {
-  stop: Stop;
-  onClose: () => void;
-  buses: StopInfoBus[];
-}) {
+export const currentStop = signal<Stop | null>(null);
+
+const handleStopClick = (feature: MapGeoJSONFeature) => {
+  currentStop.value = feature.properties as Stop;
+};
+
+const handleStopSecondaryClick = (feature: MapGeoJSONFeature) => {
+  const stop = feature.properties as Stop;
+  window.open(stop.href);
+};
+
+export function StopPopup() {
+  const {
+    data: stopInfoData,
+    isPending,
+    error,
+  } = useQuery(getStopInfoOptions());
+
+  // Filter stop info based on current stop
+  const stopInfo = computed(() => {
+    if (!stopInfoData || isPending || error) return null;
+    if (!currentStop.value) return null;
+    const info = stopInfoData[currentStop.value.id];
+    return filterStopDetails(info ?? []);
+  });
+
+  // Register click handler for stop markers
+  mapClickHandlers["stops-marker-background"] = handleStopClick;
+
+  // Register secondary click handler for stop markers
+  mapSecondaryClickHandlers["stops-marker-background"] =
+    handleStopSecondaryClick;
+
+  if (!currentStop.value) return null;
+
   return (
     <Popup
-      longitude={stop.lon}
-      latitude={stop.lat}
+      longitude={currentStop.value.lon}
+      latitude={currentStop.value.lat}
       anchor="bottom"
       offset={15}
-      onClose={onClose}
+      onClose={() => (currentStop.value = null)}
     >
       <div className="text-center font-bold text-[16px] pb-2">
-        {stop.city} {stop.name} ({stop.id})
+        {currentStop.value.city} {currentStop.value.name} (
+        {currentStop.value.id})
       </div>
       <div className="divide-y divide-white/20">
-        {buses.map((bus, i) => (
+        {stopInfo.value?.map((bus, i) => (
           <div
             key={i}
             className="grid grid-cols-[max-content_1fr_max-content] gap-2 items-center whitespace-nowrap py-1 px-2 text-sm"

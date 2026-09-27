@@ -1,7 +1,18 @@
+import { computed, signal } from "@preact/signals-react";
 import { useQuery } from "@tanstack/react-query";
-import { Layer, Popup, Source } from "@vis.gl/react-maplibre";
+import {
+  Layer,
+  type MapGeoJSONFeature,
+  Popup,
+  Source,
+} from "@vis.gl/react-maplibre";
 import { getBusesQueryOptions } from "../../lib/api.ts";
+import {
+  mapClickHandlers,
+  mapSecondaryClickHandlers,
+} from "../MapContainer.tsx";
 import type { Bus } from "../types.ts";
+import { currentRouteBusId } from "./RouteLayer.tsx";
 
 function BusForegroundLayer() {
   return (
@@ -45,21 +56,31 @@ function BusBackgroundLayer() {
   );
 }
 
-export function BusPopup({ bus, onClose }: { bus: Bus; onClose: () => void }) {
+export function BusPopup() {
+  const { data: buses } = useQuery(getBusesQueryOptions());
+
+  const bus = computed(() => {
+    return buses?.find((bus) => bus.id === currentBusId.value) ?? null;
+  });
+
+  if (!bus.value) {
+    return null;
+  }
+
   return (
     <Popup
-      longitude={bus.lon}
-      latitude={bus.lat}
+      longitude={bus.value.lon}
+      latitude={bus.value.lat}
       anchor="bottom"
       offset={15}
-      onClose={onClose}
+      onClose={() => (currentBusId.value = null)}
     >
       <div>
         <div>
-          Linia {bus.line} | {bus.label}
+          Linia {bus.value.line} | {bus.value.label}
         </div>
-        <div>{bus.destination}</div>
-        <div>Odchyłka: {bus.deviation}</div>
+        <div>{bus.value.destination}</div>
+        <div>Odchyłka: {bus.value.deviation}</div>
       </div>
     </Popup>
   );
@@ -82,8 +103,24 @@ function BusTextLayer() {
   );
 }
 
+export const currentBusId = signal<string | null>(null);
+
+const handleBusClick = (feature: MapGeoJSONFeature) => {
+  const bus = feature.properties as Bus;
+  currentBusId.value = bus.id;
+};
+
+const handleBusSecondaryClick = (feature: MapGeoJSONFeature) => {
+  const bus = feature.properties as Bus;
+  currentRouteBusId.value = currentRouteBusId.value !== bus.id ? bus.id : null;
+};
+
 export function BusesLayer() {
   const { data } = useQuery(getBusesQueryOptions());
+
+  mapClickHandlers["buses-marker-background"] = handleBusClick;
+  mapSecondaryClickHandlers["buses-marker-background"] =
+    handleBusSecondaryClick;
 
   return (
     <Source

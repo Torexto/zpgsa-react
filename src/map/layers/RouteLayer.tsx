@@ -1,6 +1,11 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { signal } from "@preact/signals-react";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Layer, Source } from "@vis.gl/react-maplibre";
-import { getRoutesQueryOptions, getStopsQueryOptions } from "../../lib/api.ts";
+import {
+  getBusesQueryOptions,
+  getRoutesQueryOptions,
+  getStopsQueryOptions,
+} from "../../lib/api.ts";
 import type { Bus, Route, Stop } from "../types.ts";
 
 function buildRouteFeature(
@@ -32,20 +37,28 @@ function buildRouteFeature(
   };
 }
 
-export function RouteLayer({ bus }: { bus: Bus | null }) {
+export const currentRouteBusId = signal<string | null>(null);
+
+export function RouteLayer() {
+  const busId = currentRouteBusId.value;
+
+  const { data: buses } = useQuery(getBusesQueryOptions());
   const { data: stops } = useSuspenseQuery(getStopsQueryOptions());
   const { data: routes } = useSuspenseQuery(getRoutesQueryOptions());
 
-  if (!bus) return null;
+  if (!buses) return null;
 
-  const feature = buildRouteFeature(bus, stops, routes);
-  if (!feature) return null;
+  const bus = (busId && buses.find((bus) => bus.id === busId)) || null;
+
+  const feature = bus ? buildRouteFeature(bus, stops, routes) : null;
+
+  const features = feature ? [feature] : [];
 
   return (
     <Source
       id="current-route-source"
       type="geojson"
-      data={{ type: "FeatureCollection", features: [feature] }}
+      data={{ type: "FeatureCollection", features: features }}
     >
       <Layer
         id="current-route-layer"
