@@ -60,6 +60,7 @@ const goToUserLocation = (map: MapRef, longitude: number, latitude: number) => {
 };
 
 const MapSignal = signal<MapRef | null>(null);
+const IsCenterOnUser = signal<boolean>(false);
 
 export default function MapContainer() {
   const location = useGeolocation();
@@ -85,8 +86,9 @@ export default function MapContainer() {
 
   // Go to user location after map load
   useEffect(() => {
-    if (!MapSignal.value || !location.latitude || !location.longitude) return;
+    if (!MapSignal.value || !location.latitude || !location.longitude || !IsCenterOnUser.value) return;
     goToUserLocation(MapSignal.value, location.longitude, location.latitude);
+    IsCenterOnUser.value = true;
   }, [location.latitude, location.longitude]);
 
   // Register map loaders
