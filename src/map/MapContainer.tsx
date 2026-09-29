@@ -54,7 +54,7 @@ const goToUserLocation = (map: MapRef, longitude: number, latitude: number) => {
   if (latitude && longitude) {
     map.flyTo({
       center: [longitude, latitude],
-      zoom: 13,
+      zoom: 15,
     });
   }
 };
