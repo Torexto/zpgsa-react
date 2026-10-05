@@ -17,6 +17,7 @@ import {
   suppressNextClick,
   touchAction,
 } from "../lib/utils/map/touch.ts";
+import { MapControls } from "./Controls.tsx";
 import {
   BusesLayer,
   BusPopup,
@@ -49,7 +50,11 @@ const loadBusIcon = (event: MapLibreEvent) => {
   });
 };
 
-const goToUserLocation = (map: MapRef, longitude: number, latitude: number) => {
+export const goToUserLocation = (
+  map: MapRef,
+  longitude: number,
+  latitude: number,
+) => {
   map.flyTo({
     center: [longitude, latitude],
     zoom: 15,
@@ -98,6 +103,7 @@ export default function MapContainer() {
         latitude: 50.71,
         zoom: 13,
       }}
+      attributionControl={false}
       style={{ width: "100vw", height: "100vh" }}
       onMouseMove={handleMouseMove}
       onClick={handleMapClick}
@@ -127,6 +133,8 @@ export default function MapContainer() {
       <StopPopup />
 
       <BusPopup />
+
+      <MapControls map={mapRef.current} />
     </MapLibre>
   );
 }
