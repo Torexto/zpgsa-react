@@ -6,10 +6,8 @@ import MapLibre, {
   Source,
 } from "@vis.gl/react-maplibre";
 import type { MapLibreEvent } from "maplibre-gl";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { signal } from "@preact/signals-react";
-import { useGeolocation } from "react-use";
 import { handleMapMouseEvent } from "../lib/utils/map/event.ts";
 import {
   handleMouseMove,
@@ -26,6 +24,7 @@ import {
   StopPopup,
   StopsLayer,
 } from "./layers";
+import useUserLocation from "./useUserLocation.ts";
 
 // Map events
 export type Handler = (arg0: MapGeoJSONFeature) => void;
@@ -51,24 +50,23 @@ const loadBusIcon = (event: MapLibreEvent) => {
 };
 
 const goToUserLocation = (map: MapRef, longitude: number, latitude: number) => {
-  if (latitude && longitude) {
-    map.flyTo({
-      center: [longitude, latitude],
-      zoom: 15,
-    });
-  }
+  map.flyTo({
+    center: [longitude, latitude],
+    zoom: 15,
+  });
 };
 
-const MapSignal = signal<MapRef | null>(null);
-const IsCenterOnUser = signal<boolean>(false);
-
 export default function MapContainer() {
-  const location = useGeolocation();
+  const mapRef = useRef<MapRef | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const position = useUserLocation();
 
   const handleMapLoad = (event: MapLibreEvent) => {
+    loadBusIcon(event);
     for (const handler of mapLoadedHandlers) {
       handler(event);
     }
+    setIsMapLoaded(true);
   };
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
@@ -86,21 +84,15 @@ export default function MapContainer() {
 
   // Go to user location after map load
   useEffect(() => {
-    if (!MapSignal.value || !location.latitude || !location.longitude || IsCenterOnUser.value) return;
-    goToUserLocation(MapSignal.value, location.longitude, location.latitude);
-    IsCenterOnUser.value = true;
-  }, [location.latitude, location.longitude]);
-
-  // Register map loaders
-  mapLoadedHandlers.push(loadBusIcon);
+    if (!isMapLoaded || !mapRef.current || !position) return;
+    goToUserLocation(mapRef.current, position.longitude, position.latitude);
+  }, [isMapLoaded, position]);
 
   touchAction.value = handleMapSecondaryClick;
 
   return (
     <MapLibre
-      ref={(instance) => {
-        if (instance) MapSignal.value = instance;
-      }}
+      ref={mapRef}
       initialViewState={{
         longitude: 16.63,
         latitude: 50.71,
