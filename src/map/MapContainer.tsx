@@ -8,6 +8,7 @@ import MapLibre, {
 import type { MapLibreEvent } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { useGeolocation } from "react-use";
 import { handleMapMouseEvent } from "../lib/utils/map/event.ts";
 import {
   handleMouseMove,
@@ -25,7 +26,6 @@ import {
   StopPopup,
   StopsLayer,
 } from "./layers";
-import useUserLocation from "./useUserLocation.ts";
 
 // Map events
 export type Handler = (arg0: MapGeoJSONFeature) => void;
@@ -64,7 +64,7 @@ export const goToUserLocation = (
 export default function MapContainer() {
   const mapRef = useRef<MapRef | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const position = useUserLocation();
+  const geolocation = useGeolocation();
 
   const handleMapLoad = (event: MapLibreEvent) => {
     loadBusIcon(event);
@@ -89,9 +89,19 @@ export default function MapContainer() {
 
   // Go to user location after map load
   useEffect(() => {
-    if (!isMapLoaded || !mapRef.current || !position) return;
-    goToUserLocation(mapRef.current, position.longitude, position.latitude);
-  }, [isMapLoaded, position]);
+    if (
+      !isMapLoaded ||
+      !mapRef.current ||
+      !geolocation.longitude ||
+      !geolocation.latitude
+    )
+      return;
+    goToUserLocation(
+      mapRef.current,
+      geolocation.longitude,
+      geolocation.latitude,
+    );
+  }, [isMapLoaded, geolocation]);
 
   touchAction.value = handleMapSecondaryClick;
 
