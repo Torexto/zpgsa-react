@@ -5,6 +5,10 @@ import {VitePWA} from "vite-plugin-pwa";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
+  optimizeDeps: {
+    // This import is injected by Babel, so Vite's dependency scan cannot see it.
+    include: ["@preact/signals-react/runtime"],
+  },
   server: {
     proxy: {
       "/api/buses": {
