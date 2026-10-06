@@ -64,6 +64,7 @@ export const goToUserLocation = (
 export default function MapContainer() {
   const mapRef = useRef<MapRef | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [isCentered, setIsCentered] = useState(false);
   const geolocation = useGeolocation();
 
   const handleMapLoad = (event: MapLibreEvent) => {
@@ -93,7 +94,8 @@ export default function MapContainer() {
       !isMapLoaded ||
       !mapRef.current ||
       !geolocation.longitude ||
-      !geolocation.latitude
+      !geolocation.latitude ||
+      isCentered
     )
       return;
     goToUserLocation(
@@ -101,7 +103,8 @@ export default function MapContainer() {
       geolocation.longitude,
       geolocation.latitude,
     );
-  }, [isMapLoaded, geolocation]);
+    setIsCentered(true);
+  }, [isMapLoaded, geolocation, isCentered]);
 
   touchAction.value = handleMapSecondaryClick;
 
