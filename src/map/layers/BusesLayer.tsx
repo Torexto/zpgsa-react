@@ -6,13 +6,27 @@ import {
   Popup,
   Source,
 } from "@vis.gl/react-maplibre";
+import type { MapLibreEvent } from "maplibre-gl";
 import { getBusesQueryOptions } from "../../lib/api.ts";
 import {
   mapClickHandlers,
+  mapLoaderHandlers,
   mapSecondaryClickHandlers,
 } from "../MapContainer.tsx";
 import type { Bus } from "../types.ts";
 import { currentRouteBusId } from "./RouteLayer.tsx";
+
+const loadBusIcon = (event: MapLibreEvent) => {
+  const map = event.target;
+
+  const imageUrl = "/assets/img/bus.png";
+
+  map.loadImage(imageUrl).then((image) => {
+    if (!map.hasImage("bus-icon")) {
+      map.addImage("bus-icon", image.data);
+    }
+  });
+};
 
 function BusForegroundLayer() {
   return (
@@ -121,6 +135,7 @@ export function BusesLayer() {
   mapClickHandlers["buses-marker-background"] = handleBusClick;
   mapSecondaryClickHandlers["buses-marker-background"] =
     handleBusSecondaryClick;
+  mapLoaderHandlers.push(loadBusIcon);
 
   return (
     <Source

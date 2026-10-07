@@ -1,21 +1,23 @@
 import MapLibre, {
   Layer,
-  type MapGeoJSONFeature,
   type MapLayerMouseEvent,
   type MapRef,
   Source,
 } from "@vis.gl/react-maplibre";
 import type { MapLibreEvent } from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useGeolocation } from "react-use";
-import { handleMapMouseEvent } from "../lib/utils/map/event.ts";
+import { signal } from "@preact/signals-react";
+import {
+  type HandlerRegistry,
+  handleMapMouseEvent,
+  type MapLoader,
+} from "../lib/utils/map/event.ts";
+import { flyToCurrentPosition } from "../lib/utils/map/geolocation.ts";
 import {
   handleMouseMove,
   handleTouchEndOrCancel,
   handleTouchMove,
   handleTouchStart,
-  suppressNextClick,
   touchAction,
 } from "../lib/utils/map/touch.ts";
 import { MapControls } from "./Controls.tsx";
@@ -27,60 +29,25 @@ import {
   StopsLayer,
 } from "./layers";
 
-// Map events
-export type Handler = (arg0: MapGeoJSONFeature) => void;
-export type HandlerRegistry = Record<string, Handler>;
+// Map events registry
 
 export const mapClickHandlers: HandlerRegistry = {};
 export const mapSecondaryClickHandlers: HandlerRegistry = {};
 
-// Map loaders
-type MapLoader = (arg0: MapLibreEvent) => void;
-export const mapLoadedHandlers: MapLoader[] = [];
+// Map loaders registry
+export const mapLoaderHandlers: MapLoader[] = [];
 
-const loadBusIcon = (event: MapLibreEvent) => {
-  const map = event.target;
-
-  const imageUrl = "/assets/img/bus.png";
-
-  map.loadImage(imageUrl).then((image) => {
-    if (!map.hasImage("bus-icon")) {
-      map.addImage("bus-icon", image.data);
-    }
-  });
-};
-
-export const goToUserLocation = (
-  map: MapRef,
-  longitude: number,
-  latitude: number,
-) => {
-  map.flyTo({
-    center: [longitude, latitude],
-    zoom: 15,
-  });
-};
+// Map reference
+export const mapSignal = signal<MapRef | null>(null);
 
 export default function MapContainer() {
-  const mapRef = useRef<MapRef | null>(null);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const [isCentered, setIsCentered] = useState(false);
-  const geolocation = useGeolocation();
-
   const handleMapLoad = (event: MapLibreEvent) => {
-    loadBusIcon(event);
-    for (const handler of mapLoadedHandlers) {
+    for (const handler of mapLoaderHandlers) {
       handler(event);
     }
-    setIsMapLoaded(true);
   };
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
-    if (suppressNextClick.value) {
-      suppressNextClick.value = false;
-      return;
-    }
-
     handleMapMouseEvent(event, mapClickHandlers);
   };
 
@@ -88,29 +55,17 @@ export default function MapContainer() {
     handleMapMouseEvent(event, mapSecondaryClickHandlers);
   };
 
-  // Go to user location after map load
-  useEffect(() => {
-    if (
-      !isMapLoaded ||
-      !mapRef.current ||
-      !geolocation.longitude ||
-      !geolocation.latitude ||
-      isCentered
-    )
-      return;
-    goToUserLocation(
-      mapRef.current,
-      geolocation.longitude,
-      geolocation.latitude,
-    );
-    setIsCentered(true);
-  }, [isMapLoaded, geolocation, isCentered]);
-
   touchAction.value = handleMapSecondaryClick;
+
+  mapLoaderHandlers.push((event) => flyToCurrentPosition(event.target));
 
   return (
     <MapLibre
-      ref={mapRef}
+      ref={(instance) => {
+        if (instance) {
+          mapSignal.value = instance;
+        }
+      }}
       initialViewState={{
         longitude: 16.63,
         latitude: 50.71,
@@ -118,10 +73,12 @@ export default function MapContainer() {
       }}
       attributionControl={false}
       style={{ width: "100vw", height: "100vh" }}
-      onMouseMove={handleMouseMove}
+      onLoad={handleMapLoad}
+      // Mouse events
       onClick={handleMapClick}
       onContextMenu={handleMapSecondaryClick}
-      onLoad={handleMapLoad}
+      onMouseMove={handleMouseMove}
+      // Touch events
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEndOrCancel}
@@ -147,7 +104,7 @@ export default function MapContainer() {
 
       <BusPopup />
 
-      <MapControls map={mapRef.current} />
+      <MapControls />
     </MapLibre>
   );
 }

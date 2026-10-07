@@ -10,7 +10,6 @@ const LONG_PRESS_MOVE_THRESHOLD_PX = 10;
 
 const longPressStart = signal<{ x: number; y: number } | null>(null);
 const longPressTimer = signal<number | null>(null);
-export const suppressNextClick = signal<boolean>(false);
 export const touchAction = signal<((arg0: MapLayerMouseEvent) => void) | null>(
   null,
 );
@@ -23,11 +22,8 @@ const cancelLongPress = () => {
   longPressStart.value = null;
 };
 
-// useEffect(() => cancelLongPress, [cancelLongPress]);
-
 const triggerContextMenuAction = (event: MapLayerTouchEvent) => {
   cancelLongPress();
-  suppressNextClick.value = true;
   event.preventDefault();
   if (!touchAction.value) return;
   touchAction.value(event as unknown as MapLayerMouseEvent);
