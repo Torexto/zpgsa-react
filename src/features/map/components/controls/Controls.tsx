@@ -27,9 +27,9 @@ export function MapControls() {
         <Compass />
       </Button>
 
-      <Button onClick={() => alert("Już niedługo")}>
-        <Search />
-      </Button>
+      {/*<Button onClick={() => alert("Już niedługo")}>*/}
+      {/*  <Search />*/}
+      {/*</Button>*/}
     </div>
   );
 }
