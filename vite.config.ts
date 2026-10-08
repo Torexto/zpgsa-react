@@ -5,90 +5,94 @@ import {VitePWA} from "vite-plugin-pwa";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  optimizeDeps: {
-    // This import is injected by Babel, so Vite's dependency scan cannot see it.
-    include: ["@preact/signals-react/runtime"],
-  },
-  server: {
-    proxy: {
-      "/api/buses": {
-        target: "http://bielawa.trapeze.fi",
-        changeOrigin: true,
-        rewrite: (_) => "/bussit/web?command=olmapvehicles&action=getVehicles",
-      },
+    optimizeDeps: {
+        // This import is injected by Babel, so Vite's dependency scan cannot see it.
+        include: ["@preact/signals-react/runtime"],
     },
-  },
+    server: {
+        proxy: {
+            "/api/buses": {
+                target: "http://bielawa.trapeze.fi",
+                changeOrigin: true,
+                rewrite: (_) => "/bussit/web?command=olmapvehicles&action=getVehicles",
+            },
+        },
+    },
 
-  plugins: [
-    react(),
-    babel({
-      // presets: [reactCompilerPreset()],
-      plugins: ["module:@preact/signals-react-transform"],
-    }),
-    tailwindcss(),
+    resolve: {
+        tsconfigPaths: true
+    },
 
-    VitePWA({
-      strategies: "generateSW",
-      injectRegister: "script-defer",
-      registerType: "autoUpdate",
-      manifest: {
-        name: "Zpgsa",
-        short_name: "Zpgsa",
-        theme_color: "#000000",
-        background_color: "#000000",
-        display: "standalone",
-        scope: "./",
-        start_url: "./",
-        icons: [
-          {
-            src: "icons/icon-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "maskable any",
-          },
-          {
-            src: "icons/icon-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable any",
-          },
-        ],
-      },
-      workbox: {
-        skipWaiting: true,
-        clientsClaim: true,
-        maximumFileSizeToCacheInBytes: 10485760,
+    plugins: [
+        react(),
+        babel({
+            // presets: [reactCompilerPreset()],
+            plugins: ["module:@preact/signals-react-transform"],
+        }),
+        tailwindcss(),
 
-        navigateFallback: "index.html",
+        VitePWA({
+            strategies: "generateSW",
+            injectRegister: "script-defer",
+            registerType: "autoUpdate",
+            manifest: {
+                name: "Zpgsa",
+                short_name: "Zpgsa",
+                theme_color: "#000000",
+                background_color: "#000000",
+                display: "standalone",
+                scope: "./",
+                start_url: "./",
+                icons: [
+                    {
+                        src: "icons/icon-192x192.png",
+                        sizes: "192x192",
+                        type: "image/png",
+                        purpose: "maskable any",
+                    },
+                    {
+                        src: "icons/icon-512x512.png",
+                        sizes: "512x512",
+                        type: "image/png",
+                        purpose: "maskable any",
+                    },
+                ],
+            },
+            workbox: {
+                skipWaiting: true,
+                clientsClaim: true,
+                maximumFileSizeToCacheInBytes: 10485760,
 
-        globIgnores: ["**/api/**/*"],
-        globPatterns: [
-          "index.html",
-          "**/*.{js,css,ico,png,svg,webmanifest,json}",
-        ],
+                navigateFallback: "index.html",
 
-        ignoreURLParametersMatching: [/.*/],
+                globIgnores: ["**/api/**/*"],
+                globPatterns: [
+                    "index.html",
+                    "**/*.{js,css,ico,png,svg,webmanifest,json}",
+                ],
 
-        runtimeCaching: [
-          {
-            urlPattern: /\.(js|css|json)$/,
-            handler: "NetworkFirst",
-            options: {cacheName: "logic"},
-          },
-          {
-            urlPattern: /\.(png|xml|txt|webmanifest|ico|svg)$/,
-            handler: "CacheFirst",
-            options: {cacheName: "assets"},
-          },
-          {
-            urlPattern: ({request, url}) =>
-              request.mode === "navigate" && !url.pathname.startsWith("/api/"),
-            handler: "NetworkFirst",
-            options: {cacheName: "html"},
-          },
-        ],
-      },
-    }),
+                ignoreURLParametersMatching: [/.*/],
 
-  ],
+                runtimeCaching: [
+                    {
+                        urlPattern: /\.(js|css|json)$/,
+                        handler: "NetworkFirst",
+                        options: {cacheName: "logic"},
+                    },
+                    {
+                        urlPattern: /\.(png|xml|txt|webmanifest|ico|svg)$/,
+                        handler: "CacheFirst",
+                        options: {cacheName: "assets"},
+                    },
+                    {
+                        urlPattern: ({request, url}) =>
+                            request.mode === "navigate" && !url.pathname.startsWith("/api/"),
+                        handler: "NetworkFirst",
+                        options: {cacheName: "html"},
+                    },
+                ],
+            },
+        }),
+
+    ],
 })

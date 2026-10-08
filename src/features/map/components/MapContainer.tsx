@@ -11,16 +11,16 @@ import {
   type HandlerRegistry,
   handleMapMouseEvent,
   type MapLoader,
-} from "../lib/utils/map/event.ts";
-import { flyToCurrentPosition } from "../lib/utils/map/geolocation.ts";
+} from "../utils/map/event.ts";
+import { flyToCurrentPosition } from "../utils/map/geolocation.ts";
 import {
   handleMouseMove,
   handleTouchEndOrCancel,
   handleTouchMove,
   handleTouchStart,
   touchAction,
-} from "../lib/utils/map/touch.ts";
-import { MapControls } from "./Controls.tsx";
+} from "../utils/map/touch.ts";
+import { MapControls } from "./controls/Controls.tsx";
 import {
   BusesLayer,
   BusPopup,
@@ -28,6 +28,7 @@ import {
   StopPopup,
   StopsLayer,
 } from "./layers";
+import "../assets/index.css";
 
 // Map events registry
 
@@ -40,7 +41,7 @@ export const mapLoaderHandlers: MapLoader[] = [];
 // Map reference
 export const mapSignal = signal<MapRef | null>(null);
 
-export default function MapContainer() {
+export function MapContainer() {
   const handleMapLoad = (event: MapLibreEvent) => {
     for (const handler of mapLoaderHandlers) {
       handler(event);

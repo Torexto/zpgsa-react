@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import type { StopInfoBus } from "./types";
+import type { StopInfoBus } from "@/features/map/types.ts";
 
 interface DateRange {
   from: DateTime;

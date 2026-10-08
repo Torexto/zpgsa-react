@@ -7,13 +7,13 @@ import {
   Source,
 } from "@vis.gl/react-maplibre";
 import type { MapLibreEvent } from "maplibre-gl";
-import { getBusesQueryOptions } from "../../lib/api.ts";
+import { getBusesQueryOptions } from "@/features/map/api";
 import {
   mapClickHandlers,
   mapLoaderHandlers,
   mapSecondaryClickHandlers,
-} from "../MapContainer.tsx";
-import type { Bus } from "../types.ts";
+} from "@/features/map/components/MapContainer.tsx";
+import type { Bus } from "@/features/map/types.ts";
 import { currentRouteBusId } from "./RouteLayer.tsx";
 
 const loadBusIcon = (event: MapLibreEvent) => {
@@ -117,7 +117,7 @@ function BusTextLayer() {
   );
 }
 
-export const currentBusId = signal<string | null>(null);
+const currentBusId = signal<string | null>(null);
 
 const handleBusClick = (feature: MapGeoJSONFeature) => {
   const bus = feature.properties as Bus;

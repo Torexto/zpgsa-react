@@ -1,4 +1,4 @@
-import type { Bus, ZpgsaBus } from "./types";
+import type { Bus, ZpgsaBus } from "@/features/map/types.ts";
 
 function formatDeviation(ms: number): string {
   const sign = ms < 0 ? "-" : "+";
@@ -25,7 +25,7 @@ function getIcon(deviation: number) {
       : "bus-on-time";
 }
 
-export default function toBus(bus: ZpgsaBus): Bus {
+export default function bus(bus: ZpgsaBus): Bus {
   return {
     id: bus.id,
     label: bus.label.slice(0, 3),

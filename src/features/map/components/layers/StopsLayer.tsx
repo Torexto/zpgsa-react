@@ -1,18 +1,18 @@
 import { computed, signal } from "@preact/signals-react";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Layer,
   type MapGeoJSONFeature,
   Popup,
   Source,
 } from "@vis.gl/react-maplibre";
-import { getStopInfoOptions, getStopsQueryOptions } from "../../lib/api.ts";
-import filterStopDetails from "../filterStopDetails.ts";
+import { getStopInfoOptions, getStopsQueryOptions } from "@/features/map/api";
 import {
   mapClickHandlers,
   mapSecondaryClickHandlers,
-} from "../MapContainer.tsx";
-import type { Stop } from "../types.ts";
+} from "@/features/map/components/MapContainer.tsx";
+import type { Stop } from "@/features/map/types.ts";
+import filterStopInfo from "@/features/map/utils/map/filterStopDetails.ts";
 
 function StopsBackgroundLayer() {
   return (
@@ -81,7 +81,7 @@ export function StopPopup() {
     if (!stopInfoData || isPending || error) return null;
     if (!currentStop.value) return null;
     const info = stopInfoData[currentStop.value.id];
-    return filterStopDetails(info ?? []);
+    return filterStopInfo(info ?? []);
   });
 
   // Register click handler for stop markers
@@ -122,7 +122,7 @@ export function StopPopup() {
 }
 
 export function StopsLayer() {
-  const { data } = useSuspenseQuery(getStopsQueryOptions());
+  const { data } = useQuery(getStopsQueryOptions());
 
   const stopsDataFeature = {
     type: "FeatureCollection",

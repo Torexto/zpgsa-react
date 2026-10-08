@@ -1,7 +1,7 @@
 import { Compass, Search } from "lucide-react";
 import type * as React from "react";
-import { flyToCurrentPosition } from "../lib/utils/map/geolocation.ts";
-import { mapSignal } from "./MapContainer.tsx";
+import { mapSignal } from "@/features/map/components/MapContainer.tsx";
+import { flyToCurrentPosition } from "@/features/map/utils/map/geolocation.ts";
 
 interface ButtonProps {
   onClick: () => void;

@@ -1,5 +1,5 @@
-import toBus from "../map/toBus.ts";
-import type { Route, Stop, StopInfoBus, ZpgsaBus } from "../map/types.ts";
+import type { Route, Stop, StopInfoBus, ZpgsaBus } from "../types.ts";
+import bus from "../utils/map/bus.ts";
 
 async function fetchData(endpoint: string) {
   return fetch(endpoint).then((r) => r.json());
@@ -15,7 +15,7 @@ export function getBusesQueryOptions() {
   return {
     queryKey: ["buses"],
     queryFn: () =>
-      fetchData("/api/buses").then((data: ZpgsaBus[]) => data.map(toBus)),
+      fetchData("/api/buses").then((data: ZpgsaBus[]) => data.map(bus)),
     refetchInterval: 3000,
   };
 }
