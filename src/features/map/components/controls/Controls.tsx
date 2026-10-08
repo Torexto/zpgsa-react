@@ -1,4 +1,4 @@
-import { Compass, Search } from "lucide-react";
+import { Compass } from "lucide-react";
 import type * as React from "react";
 import { mapSignal } from "@/features/map/components/MapContainer.tsx";
 import { flyToCurrentPosition } from "@/features/map/utils/map/geolocation.ts";
