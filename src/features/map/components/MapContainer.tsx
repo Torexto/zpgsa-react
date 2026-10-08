@@ -4,7 +4,7 @@ import MapLibre, {
   type MapRef,
   Source,
 } from "@vis.gl/react-maplibre";
-import type { MapLibreEvent } from "maplibre-gl";
+import { type MapLibreEvent, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { signal } from "@preact/signals-react";
 import {
@@ -29,6 +29,10 @@ import {
   StopsLayer,
 } from "./layers";
 import "../assets/index.css";
+
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+
+setWorkerUrl(workerUrl);
 
 // Map events registry
 
