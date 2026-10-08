@@ -5,9 +5,20 @@ import {VitePWA} from "vite-plugin-pwa";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-    optimizeDeps: {
-        // This import is injected by Babel, so Vite's dependency scan cannot see it.
-        include: ["@preact/signals-react/runtime"],
+    build: {
+        chunkSizeWarningLimit: 1200,
+        rolldownOptions: {
+            output: {
+                codeSplitting: {
+                    groups: [{
+                        name: "maplibre",
+                        test: "/node_modules[\\/]maplibre-gl/",
+                        priority: 30
+                    }
+                    ]
+                }
+            }
+        }
     },
     server: {
         proxy: {
