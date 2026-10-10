@@ -47,7 +47,7 @@ export const mapLoaderHandlers: MapLoader[] = [];
 export const mapSignal = signal<MapRef | null>(null);
 
 // Map style
-export const mapStyle = signal<MapStyle>(mapStyles[1]);
+export const mapStyle = signal<MapStyle>(mapStyles[0]);
 
 export function MapContainer() {
   const handleMapLoad = (event: MapLibreEvent) => {
