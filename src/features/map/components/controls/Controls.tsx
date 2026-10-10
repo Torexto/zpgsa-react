@@ -1,29 +1,42 @@
 import { useSignal } from "@preact/signals-react";
-import { Compass, Palette, Search } from "lucide-react";
-import type * as React from "react";
+import { Compass, Search } from "lucide-react";
+import { type ReactNode, useState } from "react";
 import { SearchModal } from "@/features/map/components/controls/Search.tsx";
 import { mapSignal } from "@/features/map/components/MapContainer.tsx";
+import type { MapStyle } from "@/features/map/types.ts";
 import { flyToCurrentPosition } from "@/features/map/utils/map/geolocation.ts";
+import { MapStylePicker } from "./MapStylePicker.tsx";
+import "../../assets/controls.css";
 
 interface ButtonProps {
   onClick: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
+  label: string;
 }
 
-export function Button({ onClick, children }: ButtonProps) {
+export function Button({ onClick, children, label }: ButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-16 h-16 bg-gray-700 flex items-center justify-center text-gray-300 rounded-3xl cursor-pointer"
+      aria-label={label}
+      title={label}
+      className="map-control-button"
     >
       {children}
     </button>
   );
 }
 
-export function MapControls({ cycleMapStyle }: { cycleMapStyle: () => void }) {
+export function MapControls({
+  mapStyle,
+  onMapStyleChange,
+}: {
+  mapStyle: MapStyle;
+  onMapStyleChange: (style: MapStyle) => void;
+}) {
   const isSearchModalOpen = useSignal(false);
+  const [isStylePickerOpen, setStylePickerOpen] = useState(false);
 
   return (
     <>
@@ -33,18 +46,28 @@ export function MapControls({ cycleMapStyle }: { cycleMapStyle: () => void }) {
           isSearchModalOpen={isSearchModalOpen}
         />
       )}
-      <div className="fixed right-4 bottom-4 flex flex-col gap-3">
-        <Button onClick={cycleMapStyle}>
-          <Palette />
-        </Button>
+      <div className="map-controls" data-style-picker-open={isStylePickerOpen}>
+        <MapStylePicker
+          isOpen={isStylePickerOpen}
+          onOpenChange={setStylePickerOpen}
+          mapStyle={mapStyle}
+          onMapStyleChange={onMapStyleChange}
+        />
 
-        <Button onClick={() => flyToCurrentPosition(mapSignal.value)}>
-          <Compass />
-        </Button>
-
-        <Button onClick={() => (isSearchModalOpen.value = true)}>
-          <Search />
-        </Button>
+        <div className="map-controls__secondary" inert={isStylePickerOpen}>
+          <Button
+            label="Moja lokalizacja"
+            onClick={() => flyToCurrentPosition(mapSignal.value)}
+          >
+            <Compass aria-hidden="true" />
+          </Button>
+          <Button
+            label="Znajdź przystanek"
+            onClick={() => (isSearchModalOpen.value = true)}
+          >
+            <Search aria-hidden="true" />
+          </Button>
+        </div>
       </div>
     </>
   );
