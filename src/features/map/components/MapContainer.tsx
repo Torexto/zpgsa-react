@@ -46,8 +46,23 @@ export const mapLoaderHandlers: MapLoader[] = [];
 // Map reference
 export const mapSignal = signal<MapRef | null>(null);
 
+const getMapStyle = () => {
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme) {
+    const theme = mapStyles.find((style) => style.id === savedTheme);
+    if (theme) {
+      return theme;
+    }
+  }
+  return mapStyles[0];
+};
+
 // Map style
-export const mapStyle = signal<MapStyle>(mapStyles[0]);
+export const mapStyle = signal<MapStyle>(getMapStyle());
+
+mapStyle.subscribe(() => {
+  localStorage.setItem("theme", mapStyle.value.id);
+});
 
 export function MapContainer() {
   const handleMapLoad = (event: MapLibreEvent) => {
