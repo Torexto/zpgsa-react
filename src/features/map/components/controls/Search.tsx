@@ -6,7 +6,6 @@ import Fuse, { type IFuseOptions } from "fuse.js";
 import { useEffect, useMemo, useRef } from "react";
 import { getStopsQueryOptions } from "@/features/map/api";
 import type { Stop } from "@/features/map/types.ts";
-import { useVisualViewport } from "@/hooks/useVisualViewPort.tsx";
 
 const fuseOptions: IFuseOptions<Stop> = {
   keys: ["city", "name"],
@@ -23,8 +22,6 @@ export function SearchModal({
   map: MapRef | null;
   isSearchModalOpen: Signal<boolean>;
 }) {
-  const viewportHeight = useVisualViewport();
-
   const { data: stops, isPending, isError } = useQuery(getStopsQueryOptions());
   const fuse = useMemo(() => new Fuse(stops ?? [], fuseOptions), [stops]);
 
