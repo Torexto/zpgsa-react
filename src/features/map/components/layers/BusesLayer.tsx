@@ -3,25 +3,23 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Layer,
   type MapGeoJSONFeature,
+  type MapRef,
   Popup,
   Source,
 } from "@vis.gl/react-maplibre";
-import type { MapLibreEvent } from "maplibre-gl";
 import { getBusesQueryOptions } from "@/features/map/api";
 import {
   mapClickHandlers,
-  mapLoaderHandlers,
   mapSecondaryClickHandlers,
+  mapSignal,
 } from "@/features/map/components/MapContainer.tsx";
 import type { Bus } from "@/features/map/types.ts";
 import { currentRouteBusId } from "./RouteLayer.tsx";
 
-const loadBusIcon = (event: MapLibreEvent) => {
-  const map = event.target;
-
+const loadBusIcon = (map: MapRef) => {
   const imageUrl = "/assets/img/bus.png";
 
-  map.loadImage(imageUrl).then((image) => {
+  return map.loadImage(imageUrl).then((image) => {
     if (!map.hasImage("bus-icon")) {
       map.addImage("bus-icon", image.data);
     }
@@ -112,6 +110,7 @@ function BusTextLayer() {
         "text-size": 14,
         "text-allow-overlap": true,
         "text-ignore-placement": true,
+        "text-font": ["Noto Sans Regular"],
       }}
     />
   );
@@ -135,7 +134,14 @@ export function BusesLayer() {
   mapClickHandlers["buses-marker-background"] = handleBusClick;
   mapSecondaryClickHandlers["buses-marker-background"] =
     handleBusSecondaryClick;
-  mapLoaderHandlers.push(loadBusIcon);
+
+  mapSignal.value?.setMissingStyleImageResolver((id) => {
+    if (id === "bus-icon") {
+      if (mapSignal.value) {
+        return loadBusIcon(mapSignal.value);
+      }
+    }
+  });
 
   return (
     <Source

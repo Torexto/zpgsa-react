@@ -22,11 +22,12 @@ function StopsBackgroundLayer() {
       source="stops"
       layout={{
         "text-field": "■",
-        "text-size": 24,
+        "text-size": 36,
         "text-allow-overlap": true,
         "text-ignore-placement": true,
         "text-anchor": "center",
         "text-justify": "center",
+        "text-font": ["Noto Sans Regular"],
       }}
       paint={{
         "text-color": "dodgerblue",
@@ -43,13 +44,12 @@ function StopsForegroundLayer() {
       source="stops"
       layout={{
         "text-field": ["to-string", ["coalesce", ["get", "point_count"], 1]],
-        "text-size": 12,
+        "text-size": 14,
         "text-allow-overlap": true,
         "text-ignore-placement": true,
         "text-anchor": "center",
         "text-justify": "center",
-        "text-font": ["sans-serif"],
-        "text-offset": [0, 0.1],
+        "text-font": ["Noto Sans Regular"],
       }}
       paint={{
         "text-color": "white",

@@ -1,5 +1,5 @@
 import { useSignal } from "@preact/signals-react";
-import { Compass, Search } from "lucide-react";
+import { Compass, Palette, Search } from "lucide-react";
 import type * as React from "react";
 import { SearchModal } from "@/features/map/components/controls/Search.tsx";
 import { mapSignal } from "@/features/map/components/MapContainer.tsx";
@@ -22,7 +22,7 @@ export function Button({ onClick, children }: ButtonProps) {
   );
 }
 
-export function MapControls() {
+export function MapControls({ cycleMapStyle }: { cycleMapStyle: () => void }) {
   const isSearchModalOpen = useSignal(false);
 
   return (
@@ -34,6 +34,10 @@ export function MapControls() {
         />
       )}
       <div className="fixed right-4 bottom-4 flex flex-col gap-3">
+        <Button onClick={cycleMapStyle}>
+          <Palette />
+        </Button>
+
         <Button onClick={() => flyToCurrentPosition(mapSignal.value)}>
           <Compass />
         </Button>

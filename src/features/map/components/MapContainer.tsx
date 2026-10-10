@@ -1,12 +1,11 @@
 import MapLibre, {
-  Layer,
   type MapLayerMouseEvent,
   type MapRef,
   Source,
 } from "@vis.gl/react-maplibre";
 import { type MapLibreEvent, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { signal } from "@preact/signals-react";
+import { signal, useSignal } from "@preact/signals-react";
 import {
   type HandlerRegistry,
   handleMapMouseEvent,
@@ -31,8 +30,17 @@ import {
 import "../assets/index.css";
 
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import type { MapStyle } from "@/features/map/types.ts";
 
 setWorkerUrl(workerUrl);
+
+const mapStyles: MapStyle[] = [
+  "liberty",
+  "fiord",
+  "dark",
+  "positron",
+  "bright",
+];
 
 // Map events registry
 
@@ -46,6 +54,12 @@ export const mapLoaderHandlers: MapLoader[] = [];
 export const mapSignal = signal<MapRef | null>(null);
 
 export function MapContainer() {
+  const mapStyleIndex = useSignal(0);
+
+  const cycleMapStyle = () => {
+    mapStyleIndex.value = (mapStyleIndex.value + 1) % mapStyles.length;
+  };
+
   const handleMapLoad = (event: MapLibreEvent) => {
     for (const handler of mapLoaderHandlers) {
       handler(event);
@@ -76,6 +90,7 @@ export function MapContainer() {
         latitude: 50.71,
         zoom: 13,
       }}
+      mapStyle={`https://tiles.openfreemap.org/styles/${mapStyles[mapStyleIndex.value]}`}
       attributionControl={false}
       style={{ width: "100vw", height: "100vh" }}
       onLoad={handleMapLoad}
@@ -96,7 +111,7 @@ export function MapContainer() {
         tileSize={256}
         attribution="&copy; OpenStreetMap"
       >
-        <Layer id="osm-layer" type="raster" />
+        {/*<Layer id="osm-layer" type="raster" />*/}
       </Source>
 
       <StopsLayer />
@@ -109,7 +124,7 @@ export function MapContainer() {
 
       <BusPopup />
 
-      <MapControls />
+      <MapControls cycleMapStyle={cycleMapStyle} />
     </MapLibre>
   );
 }

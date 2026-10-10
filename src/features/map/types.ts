@@ -55,3 +55,5 @@ export interface ZpgsaBus {
   vehicleComputer: string;
   vehicleFeatures: [];
 }
+
+export type MapStyle = "liberty" | "dark" | "fiord" | "positron" | "bright";
