@@ -36,7 +36,7 @@ export function MapControls({
   onMapStyleChange: (style: MapStyle) => void;
 }) {
   const isSearchModalOpen = useSignal(false);
-  const [isStylePickerOpen, setStylePickerOpen] = useState(false);
+  const isStylePickerOpen = useSignal(false);
 
   return (
     <>
@@ -46,15 +46,20 @@ export function MapControls({
           isSearchModalOpen={isSearchModalOpen}
         />
       )}
-      <div className="map-controls" data-style-picker-open={isStylePickerOpen}>
+      <div
+        className="map-controls"
+        data-style-picker-open={isStylePickerOpen.value}
+      >
         <MapStylePicker
           isOpen={isStylePickerOpen}
-          onOpenChange={setStylePickerOpen}
           mapStyle={mapStyle}
           onMapStyleChange={onMapStyleChange}
         />
 
-        <div className="map-controls__secondary" inert={isStylePickerOpen}>
+        <div
+          className="map-controls__secondary"
+          inert={isStylePickerOpen.value}
+        >
           <Button
             label="Moja lokalizacja"
             onClick={() => flyToCurrentPosition(mapSignal.value)}

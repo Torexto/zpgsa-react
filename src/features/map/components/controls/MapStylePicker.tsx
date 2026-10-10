@@ -1,3 +1,4 @@
+import type { Signal } from "@preact/signals-react";
 import { Check, Palette, X } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 import type { MapStyle } from "@/features/map/types.ts";
@@ -11,15 +12,13 @@ const mapStyles = [
 ] satisfies { id: MapStyle; name: string; description: string }[];
 
 interface MapStylePickerProps {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+  isOpen: Signal<boolean>;
   mapStyle: MapStyle;
   onMapStyleChange: (style: MapStyle) => void;
 }
 
 export function MapStylePicker({
   isOpen,
-  onOpenChange,
   mapStyle,
   onMapStyleChange,
 }: MapStylePickerProps) {
@@ -30,7 +29,7 @@ export function MapStylePicker({
   const optionsRef = useRef<HTMLFieldSetElement>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen.value) return;
 
     optionsRef.current
       ?.querySelector<HTMLInputElement>("input:checked")
@@ -38,13 +37,13 @@ export function MapStylePicker({
 
     const handlePointerDown = (event: PointerEvent) => {
       if (!containerRef.current?.contains(event.target as Node)) {
-        onOpenChange(false);
+        isOpen.value = false;
       }
     };
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onOpenChange(false);
+        isOpen.value = false;
       }
     };
 
@@ -56,7 +55,7 @@ export function MapStylePicker({
       document.removeEventListener("keydown", handleKeyDown);
       triggerRef.current?.focus({ preventScroll: true });
     };
-  }, [isOpen, onOpenChange]);
+  }, [isOpen]);
 
   return (
     <div className="map-style-picker" ref={containerRef}>
@@ -66,11 +65,11 @@ export function MapStylePicker({
         className="map-style-picker__trigger"
         aria-label="Zmień motyw mapy"
         title="Zmień motyw mapy"
-        aria-expanded={isOpen}
+        aria-expanded={isOpen.value}
         aria-controls={panelId}
         aria-haspopup="dialog"
-        inert={isOpen}
-        onClick={() => onOpenChange(true)}
+        inert={isOpen.value}
+        onClick={() => (isOpen.value = true)}
       >
         <Palette aria-hidden="true" />
       </button>
@@ -79,8 +78,8 @@ export function MapStylePicker({
         id={panelId}
         role="dialog"
         aria-labelledby={headingId}
-        aria-hidden={!isOpen}
-        inert={!isOpen}
+        aria-hidden={!isOpen.value}
+        inert={!isOpen.value}
         className="map-style-picker__panel"
       >
         <div className="map-style-picker__header">
@@ -89,7 +88,7 @@ export function MapStylePicker({
             type="button"
             className="map-style-picker__close"
             aria-label="Zamknij wybór motywu"
-            onClick={() => onOpenChange(false)}
+            onClick={() => (isOpen.value = false)}
           >
             <X size={18} aria-hidden="true" />
           </button>
@@ -110,13 +109,13 @@ export function MapStylePicker({
                 checked={mapStyle === style.id}
                 onChange={() => onMapStyleChange(style.id)}
                 onClick={(event) => {
-                  if (event.detail > 0) onOpenChange(false);
+                  if (event.detail > 0) isOpen.value = false;
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
                     onMapStyleChange(style.id);
-                    onOpenChange(false);
+                    isOpen.value = false;
                   }
                 }}
               />
