@@ -1,5 +1,7 @@
-import { Compass } from "lucide-react";
+import { useSignal } from "@preact/signals-react";
+import { Compass, Search } from "lucide-react";
 import type * as React from "react";
+import { SearchModal } from "@/features/map/components/controls/Search.tsx";
 import { mapSignal } from "@/features/map/components/MapContainer.tsx";
 import { flyToCurrentPosition } from "@/features/map/utils/map/geolocation.ts";
 
@@ -21,15 +23,25 @@ export function Button({ onClick, children }: ButtonProps) {
 }
 
 export function MapControls() {
-  return (
-    <div className="fixed right-4 bottom-4 flex flex-col gap-3">
-      <Button onClick={() => flyToCurrentPosition(mapSignal.value)}>
-        <Compass />
-      </Button>
+  const isSearchModalOpen = useSignal(false);
 
-      {/*<Button onClick={() => alert("Już niedługo")}>*/}
-      {/*  <Search />*/}
-      {/*</Button>*/}
-    </div>
+  return (
+    <>
+      {isSearchModalOpen.value && (
+        <SearchModal
+          map={mapSignal.value}
+          isSearchModalOpen={isSearchModalOpen}
+        />
+      )}
+      <div className="fixed right-4 bottom-4 flex flex-col gap-3">
+        <Button onClick={() => flyToCurrentPosition(mapSignal.value)}>
+          <Compass />
+        </Button>
+
+        <Button onClick={() => (isSearchModalOpen.value = true)}>
+          <Search />
+        </Button>
+      </div>
+    </>
   );
 }
