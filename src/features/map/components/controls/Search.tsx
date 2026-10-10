@@ -6,6 +6,7 @@ import Fuse, { type IFuseOptions } from "fuse.js";
 import { useEffect, useMemo, useRef } from "react";
 import { getStopsQueryOptions } from "@/features/map/api";
 import type { Stop } from "@/features/map/types.ts";
+import { useVisualViewport } from "@/hooks/useVisualViewPort.tsx";
 
 const fuseOptions: IFuseOptions<Stop> = {
   keys: ["city", "name"],
@@ -22,6 +23,8 @@ export function SearchModal({
   map: MapRef | null;
   isSearchModalOpen: Signal<boolean>;
 }) {
+  const viewportHeight = useVisualViewport();
+
   const { data: stops, isPending, isError } = useQuery(getStopsQueryOptions());
   const fuse = useMemo(() => new Fuse(stops ?? [], fuseOptions), [stops]);
 
@@ -103,16 +106,16 @@ export function SearchModal({
 
       <search
         aria-label="Wyszukiwarka przystanków"
-        className="
-        absolute left-1/2 top-[50dvh] z-50
-        w-[calc(100%-2rem)] max-w-md
-        -translate-x-1/2 -translate-y-1/2
-        overflow-hidden rounded-3xl
-        border border-white/10
-        bg-zinc-950/90 text-white
-        shadow-2xl shadow-black/40
-        backdrop-blur-xl
-      "
+        className={`
+          absolute left-1/2 top-[${viewportHeight / 2}px] md:top-1/2 z-50
+          w-[calc(100%-2rem)] max-w-md
+          -translate-x-1/2 -translate-y-1/2
+          overflow-hidden rounded-3xl
+          border border-white/10
+          bg-zinc-950/90 text-white
+          shadow-2xl shadow-black/40
+          backdrop-blur-xl
+        `}
       >
         <form onSubmit={onSubmit} className="w-full">
           <div className="flex items-center gap-3 px-4">
