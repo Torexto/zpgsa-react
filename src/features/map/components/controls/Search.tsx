@@ -104,7 +104,7 @@ export function SearchModal({
       <search
         aria-label="Wyszukiwarka przystanków"
         className="
-        absolute left-1/2 top-1/2 z-50
+        absolute left-1/2 top-[50dvh] z-50
         w-[calc(100%-2rem)] max-w-md
         -translate-x-1/2 -translate-y-1/2
         overflow-hidden rounded-3xl
