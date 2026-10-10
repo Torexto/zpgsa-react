@@ -12,6 +12,7 @@ import {
   mapClickHandlers,
   mapSecondaryClickHandlers,
   mapSignal,
+  mapStyle,
 } from "@/features/map/components/MapContainer.tsx";
 import type { Bus } from "@/features/map/types.ts";
 import { currentRouteBusId } from "./RouteLayer.tsx";
@@ -52,15 +53,16 @@ function BusBackgroundLayer() {
           "match",
           ["get", "icon"],
           "bus-late",
-          "#ff6600",
+          mapStyle.value.theme === "light" ? "#ff6600" : "#aa3300",
           "bus-ahead",
-          "#ee3300",
+          mapStyle.value.theme === "light" ? "#ee0000" : "#990000",
           "bus-on-time",
-          "#3388ee",
-          "#3388ee",
+          mapStyle.value.theme === "light" ? "#3388ee" : "#0050bb",
+          mapStyle.value.theme === "light" ? "#3388ee" : "#0050bb",
         ],
         "circle-radius": 16,
-        "circle-stroke-color": "white",
+        "circle-stroke-color":
+          mapStyle.value.theme === "light" ? "#ffffff" : "#777777",
         "circle-stroke-width": 1,
         "circle-opacity": 1,
       }}
@@ -111,6 +113,9 @@ function BusTextLayer() {
         "text-allow-overlap": true,
         "text-ignore-placement": true,
         "text-font": ["Noto Sans Regular"],
+      }}
+      paint={{
+        "text-color": mapStyle.value.theme === "light" ? "#000000" : "#ffffff",
       }}
     />
   );

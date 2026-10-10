@@ -10,6 +10,7 @@ import { getStopInfoOptions, getStopsQueryOptions } from "@/features/map/api";
 import {
   mapClickHandlers,
   mapSecondaryClickHandlers,
+  mapStyle,
 } from "@/features/map/components/MapContainer.tsx";
 import type { Stop } from "@/features/map/types.ts";
 import filterStopInfo from "@/features/map/utils/map/filterStopDetails.ts";
@@ -30,7 +31,7 @@ function StopsBackgroundLayer() {
         "text-font": ["Noto Sans Regular"],
       }}
       paint={{
-        "text-color": "dodgerblue",
+        "text-color": mapStyle.value.theme === "light" ? "#1e90ff" : "#0060bb",
       }}
     />
   );
@@ -52,7 +53,7 @@ function StopsForegroundLayer() {
         "text-font": ["Noto Sans Regular"],
       }}
       paint={{
-        "text-color": "white",
+        "text-color": "#ffffff",
       }}
     />
   );
