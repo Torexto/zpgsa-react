@@ -1,0 +1,375 @@
+.map-controls {
+  --controls-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  --controls-right: max(16px, env(safe-area-inset-right, 0px));
+  --picker-width: min(
+    288px,
+    calc(
+      100vw -
+      var(--controls-right) -
+      max(16px, env(safe-area-inset-left, 0px))
+    )
+  );
+  --picker-height: min(
+    374px,
+    calc(
+      100dvh -
+      var(--controls-bottom) -
+      max(16px, env(safe-area-inset-top, 0px))
+    )
+  );
+  --controls-easing: cubic-bezier(0.22, 1, 0.36, 1);
+
+  position: fixed;
+  z-index: 20;
+  right: var(--controls-right);
+  bottom: var(--controls-bottom);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  width: 64px;
+  height: 216px;
+  font-family: inherit;
+  transition:
+    width 520ms var(--controls-easing),
+    transform 520ms var(--controls-easing);
+}
+
+.map-controls[data-style-picker-open="true"] {
+  width: var(--picker-width);
+  transform: translateY(calc(216px - var(--picker-height)));
+}
+
+.map-control-button,
+.map-style-picker {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 24px;
+  background: var(--color-gray-700);
+  color: var(--color-gray-300);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-control-button {
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    background 180ms,
+    scale 180ms;
+}
+
+.map-control-button:active {
+  scale: 0.94;
+}
+
+.map-controls__secondary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 520ms var(--controls-easing);
+}
+
+.map-controls[data-style-picker-open="true"] .map-controls__secondary {
+  pointer-events: none;
+  transform: translateY(calc(var(--controls-bottom) + 12px));
+}
+
+.map-style-picker {
+  position: relative;
+  overflow: hidden;
+  transition:
+    width 520ms var(--controls-easing),
+    height 520ms var(--controls-easing),
+    background 320ms,
+    box-shadow 320ms;
+}
+
+.map-controls[data-style-picker-open="true"] .map-style-picker {
+  width: var(--picker-width);
+  height: var(--picker-height);
+  background: rgb(17 24 39 / 96%);
+  box-shadow:
+    0 16px 48px rgb(0 0 0 / 24%),
+    0 2px 8px rgb(0 0 0 / 12%);
+  backdrop-filter: blur(20px);
+}
+
+.map-style-picker__trigger {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 23px;
+  cursor: pointer;
+  transition:
+    opacity 160ms 160ms,
+    transform 360ms var(--controls-easing);
+}
+
+.map-controls[data-style-picker-open="true"] .map-style-picker__trigger {
+  opacity: 0;
+  transform: translateX(-28px) rotate(-40deg) scale(0.5);
+  transition-delay: 0ms;
+}
+
+.map-style-picker__panel {
+  display: flex;
+  flex-direction: column;
+  width: calc(var(--picker-width) - 2px);
+  height: calc(var(--picker-height) - 2px);
+  opacity: 0;
+  transform: translateX(24px) scale(0.96);
+  transform-origin: top right;
+  transition:
+    opacity 140ms,
+    transform 320ms var(--controls-easing);
+}
+
+.map-controls[data-style-picker-open="true"] .map-style-picker__panel {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transition:
+    opacity 240ms 100ms,
+    transform 520ms var(--controls-easing);
+}
+
+.map-style-picker__header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 12px 0 20px;
+}
+
+.map-style-picker__header h2 {
+  color: #f3f4f6;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.map-style-picker__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.map-style-picker__options {
+  display: grid;
+  min-height: 0;
+  gap: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 12px 12px;
+  scrollbar-width: thin;
+}
+
+.map-style-picker__option {
+  --option-index: 0;
+
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  text-align: left;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateX(20px);
+  transition:
+    opacity 140ms,
+    transform 240ms var(--controls-easing),
+    background 160ms,
+    border-color 160ms;
+}
+
+.map-controls[data-style-picker-open="true"] .map-style-picker__option {
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity 240ms calc(100ms + var(--option-index) * 35ms),
+    transform 400ms var(--controls-easing)
+    calc(100ms + var(--option-index) * 35ms),
+    background 160ms,
+    border-color 160ms;
+}
+
+.map-style-picker__option:nth-of-type(2) {
+  --option-index: 1;
+}
+
+.map-style-picker__option:nth-of-type(3) {
+  --option-index: 2;
+}
+
+.map-style-picker__option:nth-of-type(4) {
+  --option-index: 3;
+}
+
+.map-style-picker__option:nth-of-type(5) {
+  --option-index: 4;
+}
+
+.map-style-picker__option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.map-style-picker__option[data-selected="true"] {
+  border-color: rgb(125 211 252 / 20%);
+  background: rgb(125 211 252 / 10%);
+}
+
+.map-style-picker__swatch {
+  --swatch-land: #e9e5d7;
+  --swatch-park: #a9c999;
+  --swatch-water: #91bfda;
+  --swatch-road: #fffdf5;
+
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 10px;
+  background:
+    linear-gradient(
+      38deg,
+      transparent 40%,
+      var(--swatch-road) 41% 47%,
+      transparent 48%
+    ),
+    linear-gradient(
+      112deg,
+      transparent 48%,
+      var(--swatch-road) 49% 54%,
+      transparent 55%
+    ),
+    linear-gradient(
+      155deg,
+      var(--swatch-park) 30%,
+      transparent 31% 70%,
+      var(--swatch-water) 71%
+    ),
+    var(--swatch-land);
+}
+
+.map-style-picker__swatch[data-map-style="fiord"] {
+  --swatch-land: #e3e9eb;
+  --swatch-park: #b3c5ba;
+  --swatch-water: #7ea5bd;
+  --swatch-road: #fff;
+}
+
+.map-style-picker__swatch[data-map-style="dark"] {
+  --swatch-land: #293544;
+  --swatch-park: #344d46;
+  --swatch-water: #192b40;
+  --swatch-road: #69778a;
+}
+
+.map-style-picker__swatch[data-map-style="positron"] {
+  --swatch-land: #f2f3f3;
+  --swatch-park: #dce1dd;
+  --swatch-water: #c9d5dc;
+  --swatch-road: #fff;
+}
+
+.map-style-picker__swatch[data-map-style="bright"] {
+  --swatch-land: #fff0cf;
+  --swatch-park: #a5d895;
+  --swatch-water: #7ec9ef;
+  --swatch-road: #fff;
+}
+
+.map-style-picker__label {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  color: #f3f4f6;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.map-style-picker__description {
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.map-style-picker__check {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 50%;
+  color: #0c2434;
+}
+
+.map-style-picker__option[data-selected="true"] .map-style-picker__check {
+  border-color: transparent;
+  background: #7dd3fc;
+}
+
+.map-control-button:focus-visible,
+.map-style-picker button:focus-visible,
+.map-style-picker__option:has(:focus-visible) {
+  outline: 2px solid #7dd3fc;
+  outline-offset: -4px;
+}
+
+@media (hover: hover) {
+  .map-control-button:hover {
+    background: var(--color-gray-600);
+  }
+
+  .map-style-picker__trigger:hover,
+  .map-style-picker__close:hover {
+    background: rgb(255 255 255 / 8%);
+  }
+
+  .map-style-picker__option:hover {
+    background: rgb(255 255 255 / 8%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-controls[data-style-picker-open],
+  .map-controls[data-style-picker-open]
+    :is(
+      .map-control-button,
+      .map-controls__secondary,
+      .map-style-picker,
+      .map-style-picker__trigger,
+      .map-style-picker__panel,
+      .map-style-picker__option
+    ) {
+    transition: none;
+  }
+}

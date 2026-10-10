@@ -34,14 +34,6 @@ import type { MapStyle } from "@/features/map/types.ts";
 
 setWorkerUrl(workerUrl);
 
-const mapStyles: MapStyle[] = [
-  "liberty",
-  "fiord",
-  "dark",
-  "positron",
-  "bright",
-];
-
 // Map events registry
 
 export const mapClickHandlers: HandlerRegistry = {};
@@ -54,11 +46,7 @@ export const mapLoaderHandlers: MapLoader[] = [];
 export const mapSignal = signal<MapRef | null>(null);
 
 export function MapContainer() {
-  const mapStyleIndex = useSignal(0);
-
-  const cycleMapStyle = () => {
-    mapStyleIndex.value = (mapStyleIndex.value + 1) % mapStyles.length;
-  };
+  const mapStyle = useSignal<MapStyle>("liberty");
 
   const handleMapLoad = (event: MapLibreEvent) => {
     for (const handler of mapLoaderHandlers) {
@@ -90,7 +78,7 @@ export function MapContainer() {
         latitude: 50.71,
         zoom: 13,
       }}
-      mapStyle={`https://tiles.openfreemap.org/styles/${mapStyles[mapStyleIndex.value]}`}
+      mapStyle={`https://tiles.openfreemap.org/styles/${mapStyle.value}`}
       attributionControl={false}
       style={{ width: "100vw", height: "100vh" }}
       onLoad={handleMapLoad}
@@ -124,7 +112,10 @@ export function MapContainer() {
 
       <BusPopup />
 
-      <MapControls cycleMapStyle={cycleMapStyle} />
+      <MapControls
+        mapStyle={mapStyle.value}
+        onMapStyleChange={(style) => (mapStyle.value = style)}
+      />
     </MapLibre>
   );
 }
