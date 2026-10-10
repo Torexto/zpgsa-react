@@ -1,27 +1,47 @@
 import type { Signal } from "@preact/signals-react";
 import { Check, Palette, X } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
+import { mapStyle } from "@/features/map/components/MapContainer.tsx";
 import type { MapStyle } from "@/features/map/types.ts";
 
-const mapStyles = [
-  { id: "liberty", name: "Liberty", description: "Klasyczny i czytelny" },
-  { id: "fiord", name: "Fiord", description: "Chłodne, spokojne kolory" },
-  { id: "dark", name: "Dark", description: "Na wieczorne podróże" },
-  { id: "positron", name: "Positron", description: "Prosty i minimalistyczny" },
-  { id: "bright", name: "Bright", description: "Jasny i kolorowy" },
-] satisfies { id: MapStyle; name: string; description: string }[];
+export const mapStyles: MapStyle[] = [
+  {
+    id: "liberty",
+    name: "Liberty",
+    description: "Klasyczny i czytelny",
+    theme: "light",
+  },
+  {
+    id: "fiord",
+    name: "Fiord",
+    description: "Chłodne, spokojne kolory",
+    theme: "dark",
+  },
+  {
+    id: "dark",
+    name: "Dark",
+    description: "Na wieczorne podróże",
+    theme: "dark",
+  },
+  {
+    id: "positron",
+    name: "Positron",
+    description: "Prosty i minimalistyczny",
+    theme: "light",
+  },
+  {
+    id: "bright",
+    name: "Bright",
+    description: "Jasny i kolorowy",
+    theme: "light",
+  },
+];
 
 interface MapStylePickerProps {
   isOpen: Signal<boolean>;
-  mapStyle: MapStyle;
-  onMapStyleChange: (style: MapStyle) => void;
 }
 
-export function MapStylePicker({
-  isOpen,
-  mapStyle,
-  onMapStyleChange,
-}: MapStylePickerProps) {
+export function MapStylePicker({ isOpen }: MapStylePickerProps) {
   const panelId = useId();
   const headingId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -100,21 +120,21 @@ export function MapStylePicker({
             <label
               key={style.id}
               className="map-style-picker__option"
-              data-selected={mapStyle === style.id}
+              data-selected={mapStyle.value.id === style.id}
             >
               <input
                 type="radio"
                 name={panelId}
                 value={style.id}
-                checked={mapStyle === style.id}
-                onChange={() => onMapStyleChange(style.id)}
+                checked={mapStyle.value.id === style.id}
+                onChange={() => (mapStyle.value = style)}
                 onClick={(event) => {
                   if (event.detail > 0) isOpen.value = false;
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    onMapStyleChange(style.id);
+                    mapStyle.value = style;
                     isOpen.value = false;
                   }
                 }}
@@ -131,7 +151,9 @@ export function MapStylePicker({
                 </span>
               </span>
               <span className="map-style-picker__check" aria-hidden="true">
-                {mapStyle === style.id && <Check size={14} strokeWidth={3} />}
+                {mapStyle.value.id === style.id && (
+                  <Check size={14} strokeWidth={3} />
+                )}
               </span>
             </label>
           ))}

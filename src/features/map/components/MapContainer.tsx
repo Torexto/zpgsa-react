@@ -5,7 +5,7 @@ import MapLibre, {
 } from "@vis.gl/react-maplibre";
 import { type MapLibreEvent, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { signal, useSignal } from "@preact/signals-react";
+import { signal } from "@preact/signals-react";
 import {
   type HandlerRegistry,
   handleMapMouseEvent,
@@ -30,6 +30,7 @@ import {
 import "../assets/index.css";
 
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import { mapStyles } from "@/features/map/components/controls/MapStylePicker.tsx";
 import type { MapStyle } from "@/features/map/types.ts";
 
 setWorkerUrl(workerUrl);
@@ -45,9 +46,10 @@ export const mapLoaderHandlers: MapLoader[] = [];
 // Map reference
 export const mapSignal = signal<MapRef | null>(null);
 
-export function MapContainer() {
-  const mapStyle = useSignal<MapStyle>("liberty");
+// Map style
+export const mapStyle = signal<MapStyle>(mapStyles[0]);
 
+export function MapContainer() {
   const handleMapLoad = (event: MapLibreEvent) => {
     for (const handler of mapLoaderHandlers) {
       handler(event);
@@ -78,7 +80,7 @@ export function MapContainer() {
         latitude: 50.71,
         zoom: 13,
       }}
-      mapStyle={`https://tiles.openfreemap.org/styles/${mapStyle.value}`}
+      mapStyle={`https://tiles.openfreemap.org/styles/${mapStyle.value.id}`}
       attributionControl={false}
       style={{ width: "100vw", height: "100vh" }}
       onLoad={handleMapLoad}
@@ -112,10 +114,7 @@ export function MapContainer() {
 
       <BusPopup />
 
-      <MapControls
-        mapStyle={mapStyle.value}
-        onMapStyleChange={(style) => (mapStyle.value = style)}
-      />
+      <MapControls />
     </MapLibre>
   );
 }

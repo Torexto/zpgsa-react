@@ -1,9 +1,8 @@
 import { useSignal } from "@preact/signals-react";
 import { Compass, Search } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
 import { SearchModal } from "@/features/map/components/controls/Search.tsx";
 import { mapSignal } from "@/features/map/components/MapContainer.tsx";
-import type { MapStyle } from "@/features/map/types.ts";
 import { flyToCurrentPosition } from "@/features/map/utils/map/geolocation.ts";
 import { MapStylePicker } from "./MapStylePicker.tsx";
 import "../../assets/controls.css";
@@ -28,13 +27,7 @@ export function Button({ onClick, children, label }: ButtonProps) {
   );
 }
 
-export function MapControls({
-  mapStyle,
-  onMapStyleChange,
-}: {
-  mapStyle: MapStyle;
-  onMapStyleChange: (style: MapStyle) => void;
-}) {
+export function MapControls() {
   const isSearchModalOpen = useSignal(false);
   const isStylePickerOpen = useSignal(false);
 
@@ -50,11 +43,7 @@ export function MapControls({
         className="map-controls"
         data-style-picker-open={isStylePickerOpen.value}
       >
-        <MapStylePicker
-          isOpen={isStylePickerOpen}
-          mapStyle={mapStyle}
-          onMapStyleChange={onMapStyleChange}
-        />
+        <MapStylePicker isOpen={isStylePickerOpen} />
 
         <div
           className="map-controls__secondary"
