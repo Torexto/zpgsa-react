@@ -92,9 +92,10 @@
   width: var(--picker-width);
   height: var(--picker-height);
   background: rgb(17 24 39 / 96%);
-  box-shadow:
-    0 16px 48px rgb(0 0 0 / 24%),
-    0 2px 8px rgb(0 0 0 / 12%);
+  /* Shadow for the map style picker panel */
+  /*box-shadow:*/
+  /*  0 16px 48px rgb(0 0 0 / 24%),*/
+  /*  0 2px 8px rgb(0 0 0 / 12%);*/
   backdrop-filter: blur(20px);
 }
 
