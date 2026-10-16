@@ -7,12 +7,24 @@ import { getMarker } from "./marker.ts";
 
 const LONG_PRESS_MS = 500;
 const LONG_PRESS_MOVE_THRESHOLD_PX = 10;
+const DEDUPE_MS = 300;
 
 export function useLongPress(onLongPress: (event: MapLayerMouseEvent) => void) {
   const timer = useRef<number | null>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
+  const lastFiredAt = useRef(0);
 
   const onLongPressRef = useRef(onLongPress);
+  useEffect(() => {
+    onLongPressRef.current = onLongPress;
+  });
+
+  const fire = useCallback((event: MapLayerMouseEvent) => {
+    const now = Date.now();
+    if (now - lastFiredAt.current < DEDUPE_MS) return;
+    lastFiredAt.current = now;
+    onLongPressRef.current(event);
+  }, []);
 
   const cancel = useCallback(() => {
     if (timer.current !== null) {
@@ -37,10 +49,10 @@ export function useLongPress(onLongPress: (event: MapLayerMouseEvent) => void) {
       timer.current = window.setTimeout(() => {
         cancel();
         event.preventDefault();
-        onLongPressRef.current(event as unknown as MapLayerMouseEvent);
+        fire(event as unknown as MapLayerMouseEvent);
       }, LONG_PRESS_MS);
     },
-    [cancel],
+    [cancel, fire],
   );
 
   const onTouchMove = useCallback(
@@ -62,6 +74,7 @@ export function useLongPress(onLongPress: (event: MapLayerMouseEvent) => void) {
     onTouchMove,
     onTouchEnd: cancel,
     onTouchCancel: cancel,
+    onContextMenu: fire,
   };
 }
 

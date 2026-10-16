@@ -105,7 +105,7 @@ export function MapContainer() {
       onLoad={handleMapLoad}
       // Mouse events
       onClick={handleMapClick}
-      onContextMenu={handleMapSecondaryClick}
+      onContextMenu={touchHandlers.onContextMenu}
       onMouseMove={handleMouseMove}
       // Touch events
       onTouchStart={touchHandlers.onTouchStart}
