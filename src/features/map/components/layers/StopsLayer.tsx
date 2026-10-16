@@ -1,4 +1,4 @@
-import { computed, signal } from "@preact/signals-react";
+import { computed, type Signal, useSignal } from "@preact/signals-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Layer,
@@ -7,12 +7,9 @@ import {
   Source,
 } from "@vis.gl/react-maplibre";
 import { getStopInfoOptions, getStopsQueryOptions } from "@/features/map/api";
-import {
-  mapClickHandlers,
-  mapSecondaryClickHandlers,
-  mapStyle,
-} from "@/features/map/components/MapContainer.tsx";
+import { mapStyle } from "@/features/map/components/MapContainer.tsx";
 import type { Stop } from "@/features/map/types.ts";
+import type { HandlerRegistry } from "@/features/map/utils/map/event.ts";
 import filterStopInfo from "@/features/map/utils/map/filterStopDetails.ts";
 
 function StopsBackgroundLayer() {
@@ -59,18 +56,17 @@ function StopsForegroundLayer() {
   );
 }
 
-export const currentStop = signal<Stop | null>(null);
+interface StopPopupProps {
+  mapClickHandlers: Signal<HandlerRegistry>;
+  mapSecondaryClickHandlers: Signal<HandlerRegistry>;
+}
 
-const handleStopClick = (feature: MapGeoJSONFeature) => {
-  currentStop.value = feature.properties as Stop;
-};
+export function StopPopup({
+  mapClickHandlers,
+  mapSecondaryClickHandlers,
+}: StopPopupProps) {
+  const currentStop = useSignal<Stop | null>(null);
 
-const handleStopSecondaryClick = (feature: MapGeoJSONFeature) => {
-  const stop = feature.properties as Stop;
-  window.open(stop.href);
-};
-
-export function StopPopup() {
   const {
     data: stopInfoData,
     isPending,
@@ -85,11 +81,20 @@ export function StopPopup() {
     return filterStopInfo(info ?? []);
   });
 
+  const handleStopClick = (feature: MapGeoJSONFeature) => {
+    currentStop.value = feature.properties as Stop;
+  };
+
+  const handleStopSecondaryClick = (feature: MapGeoJSONFeature) => {
+    const stop = feature.properties as Stop;
+    window.open(stop.href);
+  };
+
   // Register click handler for stop markers
-  mapClickHandlers["stops-marker-background"] = handleStopClick;
+  mapClickHandlers.value["stops-marker-background"] = handleStopClick;
 
   // Register secondary click handler for stop markers
-  mapSecondaryClickHandlers["stops-marker-background"] =
+  mapSecondaryClickHandlers.value["stops-marker-background"] =
     handleStopSecondaryClick;
 
   if (!currentStop.value) return null;

@@ -1,23 +1,23 @@
-import { computed, signal } from "@preact/signals-react";
+import { computed, type Signal } from "@preact/signals-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Layer,
   type MapGeoJSONFeature,
+  type MapInstance,
   type MapRef,
   Popup,
   Source,
 } from "@vis.gl/react-maplibre";
 import { getBusesQueryOptions } from "@/features/map/api";
-import {
-  mapClickHandlers,
-  mapSecondaryClickHandlers,
-  mapSignal,
-  mapStyle,
-} from "@/features/map/components/MapContainer.tsx";
+import { mapStyle } from "@/features/map/components/MapContainer.tsx";
 import type { Bus } from "@/features/map/types.ts";
-import { currentRouteBusId } from "./RouteLayer.tsx";
+import type {
+  HandlerRegistry,
+  MapLoader,
+  ResourceLoaderRegistry,
+} from "@/features/map/utils/map/event.ts";
 
-const loadBusIcon = (map: MapRef) => {
+const loadBusIcon = (map: MapRef | MapInstance) => {
   const imageUrl = "/assets/img/bus.png";
 
   return map.loadImage(imageUrl).then((image) => {
@@ -70,7 +70,11 @@ function BusBackgroundLayer() {
   );
 }
 
-export function BusPopup() {
+interface BusPopupProps {
+  currentBusId: Signal<string | null>;
+}
+
+export function BusPopup({ currentBusId }: BusPopupProps) {
   const { data: buses } = useQuery(getBusesQueryOptions());
 
   const bus = computed(() => {
@@ -121,32 +125,41 @@ function BusTextLayer() {
   );
 }
 
-const currentBusId = signal<string | null>(null);
+interface BusLayerProps {
+  mapClickHandlers: Signal<HandlerRegistry>;
+  mapSecondaryClickHandlers: Signal<HandlerRegistry>;
+  mapResourceLoaderHandlers: Signal<ResourceLoaderRegistry>;
+  mapLoaderHandlers: Signal<MapLoader[]>;
+  currentBusId: Signal<string | null>;
+  currentRouteBusId: Signal<string | null>;
+}
 
-const handleBusClick = (feature: MapGeoJSONFeature) => {
-  const bus = feature.properties as Bus;
-  currentBusId.value = bus.id;
-};
-
-const handleBusSecondaryClick = (feature: MapGeoJSONFeature) => {
-  const bus = feature.properties as Bus;
-  currentRouteBusId.value = currentRouteBusId.value !== bus.id ? bus.id : null;
-};
-
-export function BusesLayer() {
+export function BusesLayer({
+  mapClickHandlers,
+  mapSecondaryClickHandlers,
+  mapResourceLoaderHandlers,
+  mapLoaderHandlers,
+  currentBusId,
+  currentRouteBusId,
+}: BusLayerProps) {
   const { data } = useQuery(getBusesQueryOptions());
 
-  mapClickHandlers["buses-marker-background"] = handleBusClick;
-  mapSecondaryClickHandlers["buses-marker-background"] =
-    handleBusSecondaryClick;
+  const handleBusClick = (feature: MapGeoJSONFeature) => {
+    const bus = feature.properties as Bus;
+    currentBusId.value = bus.id;
+  };
 
-  mapSignal.value?.setMissingStyleImageResolver((id) => {
-    if (id === "bus-icon") {
-      if (mapSignal.value) {
-        return loadBusIcon(mapSignal.value);
-      }
-    }
-  });
+  const handleBusSecondaryClick = (feature: MapGeoJSONFeature) => {
+    const bus = feature.properties as Bus;
+    currentRouteBusId.value =
+      currentRouteBusId.value !== bus.id ? bus.id : null;
+  };
+
+  mapClickHandlers.value["buses-marker-background"] = handleBusClick;
+  mapSecondaryClickHandlers.value["buses-marker-background"] =
+    handleBusSecondaryClick;
+  mapLoaderHandlers.value.push((event) => loadBusIcon(event.target));
+  mapResourceLoaderHandlers.value["bus-icon"] = loadBusIcon;
 
   return (
     <Source

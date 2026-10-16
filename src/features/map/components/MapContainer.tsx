@@ -5,11 +5,12 @@ import MapLibre, {
 } from "@vis.gl/react-maplibre";
 import { type MapLibreEvent, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { signal } from "@preact/signals-react";
+import { signal, useSignal } from "@preact/signals-react";
 import {
   type HandlerRegistry,
   handleMapMouseEvent,
   type MapLoader,
+  type ResourceLoaderRegistry,
 } from "../utils/map/event.ts";
 import { flyToCurrentPosition } from "../utils/map/geolocation.ts";
 import {
@@ -30,21 +31,11 @@ import {
 import "../assets/index.css";
 
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import { useEffect, useRef } from "react";
 import { mapStyles } from "@/features/map/components/controls/MapStylePicker.tsx";
 import type { MapStyle } from "@/features/map/types.ts";
 
 setWorkerUrl(workerUrl);
-
-// Map events registry
-
-export const mapClickHandlers: HandlerRegistry = {};
-export const mapSecondaryClickHandlers: HandlerRegistry = {};
-
-// Map loaders registry
-export const mapLoaderHandlers: MapLoader[] = [];
-
-// Map reference
-export const mapSignal = signal<MapRef | null>(null);
 
 const getMapStyle = () => {
   const savedTheme = localStorage.getItem("theme");
@@ -65,31 +56,50 @@ mapStyle.subscribe(() => {
 });
 
 export function MapContainer() {
+  // Map reference
+  const mapRef = useRef<MapRef | null>(null);
+
+  // Map events registry
+  const mapClickHandlers = useSignal<HandlerRegistry>({});
+  const mapSecondaryClickHandlers = useSignal<HandlerRegistry>({});
+
+  // Map loaders registry
+  const mapResourceLoaderHandlers = useSignal<ResourceLoaderRegistry>({});
+  const mapLoaderHandlers = useSignal<MapLoader[]>([]);
+
+  const currentBusId = useSignal<string | null>(null);
+  const currentRouteBusId = useSignal<string | null>(null);
+
   const handleMapLoad = (event: MapLibreEvent) => {
-    for (const handler of mapLoaderHandlers) {
+    for (const handler of mapLoaderHandlers.value) {
       handler(event);
     }
   };
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
-    handleMapMouseEvent(event, mapClickHandlers);
+    handleMapMouseEvent(event, mapClickHandlers.value);
   };
 
   const handleMapSecondaryClick = (event: MapLayerMouseEvent) => {
-    handleMapMouseEvent(event, mapSecondaryClickHandlers);
+    handleMapMouseEvent(event, mapSecondaryClickHandlers.value);
   };
 
   touchAction.value = handleMapSecondaryClick;
 
-  mapLoaderHandlers.push((event) => flyToCurrentPosition(event.target));
+  mapLoaderHandlers.value.push((event) => flyToCurrentPosition(event.target));
+
+  useEffect(() => {
+    mapRef.current?.setMissingStyleImageResolver((id) => {
+      const handler = mapResourceLoaderHandlers.value[id];
+      if (handler && mapRef.current) {
+        handler(mapRef.current);
+      }
+    });
+  }, [mapResourceLoaderHandlers.value]);
 
   return (
     <MapLibre
-      ref={(instance) => {
-        if (instance) {
-          mapSignal.value = instance;
-        }
-      }}
+      ref={mapRef}
       initialViewState={{
         longitude: 16.63,
         latitude: 50.71,
@@ -121,15 +131,25 @@ export function MapContainer() {
 
       <StopsLayer />
 
-      <BusesLayer />
+      <BusesLayer
+        mapClickHandlers={mapClickHandlers}
+        mapSecondaryClickHandlers={mapSecondaryClickHandlers}
+        mapResourceLoaderHandlers={mapResourceLoaderHandlers}
+        mapLoaderHandlers={mapLoaderHandlers}
+        currentBusId={currentBusId}
+        currentRouteBusId={currentRouteBusId}
+      />
 
-      <RouteLayer />
+      <RouteLayer currentRouteBusId={currentRouteBusId} />
 
-      <StopPopup />
+      <StopPopup
+        mapClickHandlers={mapClickHandlers}
+        mapSecondaryClickHandlers={mapSecondaryClickHandlers}
+      />
 
-      <BusPopup />
+      <BusPopup currentBusId={currentBusId} />
 
-      <MapControls />
+      <MapControls mapRef={mapRef.current} />
     </MapLibre>
   );
 }

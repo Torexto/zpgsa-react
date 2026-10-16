@@ -2,10 +2,10 @@ import { useSignal } from "@preact/signals-react";
 import { Compass, Search } from "lucide-react";
 import type { ReactNode } from "react";
 import { SearchModal } from "@/features/map/components/controls/Search.tsx";
-import { mapSignal } from "@/features/map/components/MapContainer.tsx";
 import { flyToCurrentPosition } from "@/features/map/utils/map/geolocation.ts";
 import { MapStylePicker } from "./MapStylePicker.tsx";
 import "../../assets/controls.css";
+import type { MapRef } from "@vis.gl/react-maplibre";
 
 interface ButtonProps {
   onClick: () => void;
@@ -27,17 +27,14 @@ export function Button({ onClick, children, label }: ButtonProps) {
   );
 }
 
-export function MapControls() {
+export function MapControls({ mapRef }: { mapRef: MapRef | null }) {
   const isSearchModalOpen = useSignal(false);
   const isStylePickerOpen = useSignal(false);
 
   return (
     <>
       {isSearchModalOpen.value && (
-        <SearchModal
-          map={mapSignal.value}
-          isSearchModalOpen={isSearchModalOpen}
-        />
+        <SearchModal map={mapRef} isSearchModalOpen={isSearchModalOpen} />
       )}
       <div
         className="map-controls"
@@ -51,7 +48,7 @@ export function MapControls() {
         >
           <Button
             label="Moja lokalizacja"
-            onClick={() => flyToCurrentPosition(mapSignal.value)}
+            onClick={() => flyToCurrentPosition(mapRef)}
           >
             <Compass aria-hidden="true" />
           </Button>

@@ -1,4 +1,4 @@
-import { signal } from "@preact/signals-react";
+import type { Signal } from "@preact/signals-react";
 import { useQuery } from "@tanstack/react-query";
 import { Layer, Source } from "@vis.gl/react-maplibre";
 import {
@@ -8,9 +8,11 @@ import {
 } from "@/features/map/api";
 import { buildRouteFeature } from "@/features/map/utils/map/route.ts";
 
-export const currentRouteBusId = signal<string | null>(null);
+interface RouteLayerProps {
+  currentRouteBusId: Signal<string | null>;
+}
 
-export function RouteLayer() {
+export function RouteLayer({ currentRouteBusId }: RouteLayerProps) {
   const busId = currentRouteBusId.value;
 
   const { data: buses } = useQuery(getBusesQueryOptions());

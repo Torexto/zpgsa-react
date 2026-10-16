@@ -1,6 +1,7 @@
 import type {
   MapGeoJSONFeature,
   MapLayerMouseEvent,
+  MapRef,
 } from "@vis.gl/react-maplibre";
 import type { MapLibreEvent } from "maplibre-gl";
 import { handleCluster } from "./cluster.ts";
@@ -9,6 +10,8 @@ import { getMarker } from "./marker.ts";
 export type Handler = (arg0: MapGeoJSONFeature) => void;
 export type HandlerRegistry = Record<string, Handler>;
 export type MapLoader = (arg0: MapLibreEvent) => void;
+export type ResourceLoaderHandler = (mapRef: MapRef) => void;
+export type ResourceLoaderRegistry = Record<string, ResourceLoaderHandler>;
 
 export const handleMapMouseEvent = (
   event: MapLayerMouseEvent,
