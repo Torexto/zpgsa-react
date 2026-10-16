@@ -12,11 +12,7 @@ export function useLongPress(onLongPress: (event: MapLayerMouseEvent) => void) {
   const timer = useRef<number | null>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
 
-  // Always call the latest callback without recreating the handlers
   const onLongPressRef = useRef(onLongPress);
-  useEffect(() => {
-    onLongPressRef.current = onLongPress;
-  });
 
   const cancel = useCallback(() => {
     if (timer.current !== null) {
@@ -26,7 +22,7 @@ export function useLongPress(onLongPress: (event: MapLayerMouseEvent) => void) {
     start.current = null;
   }, []);
 
-  // Don't fire after unmount
+  // Don't fire after unmounting
   useEffect(() => cancel, [cancel]);
 
   const onTouchStart = useCallback(
