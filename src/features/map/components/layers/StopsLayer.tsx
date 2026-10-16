@@ -57,16 +57,16 @@ function StopsForegroundLayer() {
 }
 
 interface StopPopupProps {
+  currentStop: Signal<Stop | null>;
   mapClickHandlers: Signal<HandlerRegistry>;
   mapSecondaryClickHandlers: Signal<HandlerRegistry>;
 }
 
 export function StopPopup({
+  currentStop,
   mapClickHandlers,
   mapSecondaryClickHandlers,
 }: StopPopupProps) {
-  const currentStop = useSignal<Stop | null>(null);
-
   const {
     data: stopInfoData,
     isPending,
@@ -106,6 +106,7 @@ export function StopPopup({
       anchor="bottom"
       offset={15}
       onClose={() => (currentStop.value = null)}
+      closeOnClick={false}
     >
       <div className="text-center font-bold text-[16px] pb-2">
         {currentStop.value.city} {currentStop.value.name} (

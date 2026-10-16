@@ -27,7 +27,8 @@ import "../assets/index.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { useEffect, useRef } from "react";
 import { mapStyles } from "@/features/map/components/controls/MapStylePicker.tsx";
-import type { MapStyle } from "@/features/map/types.ts";
+import type { MapStyle, Stop } from "@/features/map/types.ts";
+import { getMarker } from "@/features/map/utils/map/marker.ts";
 
 setWorkerUrl(workerUrl);
 
@@ -63,6 +64,7 @@ export function MapContainer() {
 
   const currentBusId = useSignal<string | null>(null);
   const currentRouteBusId = useSignal<string | null>(null);
+  const currentStop = useSignal<Stop | null>(null);
 
   const handleMapLoad = (event: MapLibreEvent) => {
     for (const handler of mapLoaderHandlers.value) {
@@ -72,6 +74,10 @@ export function MapContainer() {
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
     handleMapMouseEvent(event, mapClickHandlers.value);
+    if (!getMarker(event)) {
+      currentBusId.value = null;
+      currentStop.value = null;
+    }
   };
 
   const handleMapSecondaryClick = (event: MapLayerMouseEvent) => {
@@ -137,6 +143,7 @@ export function MapContainer() {
       <RouteLayer currentRouteBusId={currentRouteBusId} />
 
       <StopPopup
+        currentStop={currentStop}
         mapClickHandlers={mapClickHandlers}
         mapSecondaryClickHandlers={mapSecondaryClickHandlers}
       />

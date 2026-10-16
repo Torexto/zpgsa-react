@@ -92,6 +92,7 @@ export function BusPopup({ currentBusId }: BusPopupProps) {
       anchor="bottom"
       offset={15}
       onClose={() => (currentBusId.value = null)}
+      closeOnClick={false}
     >
       <div>
         <div>
