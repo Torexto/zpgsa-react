@@ -13,13 +13,7 @@ import {
   type ResourceLoaderRegistry,
 } from "../utils/map/event.ts";
 import { flyToCurrentPosition } from "../utils/map/geolocation.ts";
-import {
-  handleMouseMove,
-  handleTouchEndOrCancel,
-  handleTouchMove,
-  handleTouchStart,
-  touchAction,
-} from "../utils/map/touch.ts";
+import { handleMouseMove, useLongPress } from "../utils/map/touch.ts";
 import { MapControls } from "./controls/Controls.tsx";
 import {
   BusesLayer,
@@ -84,7 +78,7 @@ export function MapContainer() {
     handleMapMouseEvent(event, mapSecondaryClickHandlers.value);
   };
 
-  touchAction.value = handleMapSecondaryClick;
+  const touchHandlers = useLongPress(handleMapSecondaryClick);
 
   mapLoaderHandlers.value.push((event) => flyToCurrentPosition(event.target));
 
@@ -114,10 +108,10 @@ export function MapContainer() {
       onContextMenu={handleMapSecondaryClick}
       onMouseMove={handleMouseMove}
       // Touch events
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEndOrCancel}
-      onTouchCancel={handleTouchEndOrCancel}
+      onTouchStart={touchHandlers.onTouchStart}
+      onTouchMove={touchHandlers.onTouchMove}
+      onTouchEnd={touchHandlers.onTouchEnd}
+      onTouchCancel={touchHandlers.onTouchCancel}
     >
       <Source
         id="osm-tiles"
