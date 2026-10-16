@@ -1,4 +1,4 @@
-import { computed, type Signal, useSignal } from "@preact/signals-react";
+import { computed, type Signal } from "@preact/signals-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Layer,
