@@ -16,6 +16,10 @@ div.maplibregl-popup.maplibregl-popup-anchor-bottom {
   max-width: 400px !important;
 }
 
+.maplibregl-popup {
+  --popup-background: rgba(0, 0, 0, 0.8);
+}
+
 .maplibregl-popup-content {
   background-color: var(--popup-background);
   padding: 15px;

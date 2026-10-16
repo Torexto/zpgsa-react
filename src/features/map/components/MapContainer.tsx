@@ -97,7 +97,7 @@ export function MapContainer() {
       }}
       mapStyle={`https://tiles.openfreemap.org/styles/${mapStyle.value.id}`}
       attributionControl={false}
-      style={{ width: "100%", height: "100%" }}
+      style={{ position: "fixed", inset: 0, width: "100%", height: "100%" }}
       onLoad={handleMapLoad}
       // Mouse events
       onClick={handleMapClick}

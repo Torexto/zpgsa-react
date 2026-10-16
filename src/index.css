@@ -1,27 +1,17 @@
 @import "tailwindcss";
 
-:root {
-  --popup-background: rgba(0, 0, 0, 0.8);
-  background-color: #111827;
-}
-
 html,
-body {
-  width: 100%;
-  min-height: 100%;
-  overflow-x: clip;
-  overscroll-behavior: none;
-}
-
+body,
 #root {
-  /* Keep the map in document flow so Safari can draw it beneath its toolbars. */
-  position: relative;
-  height: 100vh;
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #000;
 }
 
-@supports (height: 100lvh) {
-  #root {
-    /* The large viewport includes the space behind expanded browser controls. */
-    height: 110lvh;
-  }
-}
+/*@supports (height: 100lvh) {*/
+/*  #root {*/
+/*    height: 110lvh;*/
+/*  }*/
+/*}*/
