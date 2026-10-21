@@ -3,72 +3,72 @@
 		"city": "Bielawa",
 		"name": "Leśny Dworek",
 		"id": "1",
-		"lat": 50.652092,
-		"lon": 16.582954,
+		"lat": 50.652100,
+		"lon": 16.582956,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/02/Bielawa-Lesny-Dworek.pdf"
 	},
 	{
 		"city": "Bielawa",
 		"name": "Nowobielawska II",
 		"id": "2",
-		"lat": 50.658398,
-		"lon": 16.59364,
+		"lat": 50.658432,
+		"lon": 16.593625,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/02/Bielawa-Nowobielawska-II-.pdf"
 	},
 	{
 		"city": "Bielawa",
 		"name": "Nowobielawska II",
 		"id": "3",
-		"lat": 50.657204,
-		"lon": 16.592445,
+		"lat": 50.657235,
+		"lon": 16.592509,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/02/Bielawa-Nowobielawska-II-.pdf"
 	},
 	{
 		"city": "Bielawa",
 		"name": "Nowobielawska",
 		"id": "4",
-		"lat": 50.66149,
-		"lon": 16.595655,
+		"lat": 50.661574,
+		"lon": 16.595578,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/02/Bielawa-Nowobielawska.pdf"
 	},
 	{
 		"city": "Jodłownik",
 		"name": "",
 		"id": "6",
-		"lat": 50.648796,
-		"lon": 16.610489,
+		"lat": 50.648831,
+		"lon": 16.610480,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/02/Jodlownik-.pdf"
 	},
 	{
 		"city": "Bielawa",
 		"name": "Sowia",
 		"id": "7",
-		"lat": 50.666634,
-		"lon": 16.601404,
+		"lat": 50.666688,
+		"lon": 16.601371,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/02/Bielawa-Sowia.pdf"
 	},
 	{
 		"city": "Bielawa",
 		"name": "Sowia",
 		"id": "8",
-		"lat": 50.666897,
-		"lon": 16.601694,
+		"lat": 50.666875,
+		"lon": 16.601709,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/02/Bielawa-Sowia.pdf"
 	},
 	{
 		"city": "Bielawa",
 		"name": "Waryńskiego (Bieltex V)",
 		"id": "9",
-		"lat": 50.670147,
-		"lon": 16.603449,
+		"lat": 50.670115,
+		"lon": 16.603420,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/11/Bielawa-Warynskiego-.pdf"
 	},
 	{
 		"city": "Bielawa",
 		"name": "Waryńskiego (Bieltex V)",
 		"id": "10",
-		"lat": 50.669594,
-		"lon": 16.603582,
+		"lat": 50.669537,
+		"lon": 16.603614,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/11/Bielawa-Warynskiego-.pdf"
 	},
 	{
@@ -762,17 +762,9 @@
 	{
 		"city": "Dzierżoniów",
 		"name": "Staszica",
-		"id": "120",
-		"lat": 50.720474,
-		"lon": 16.657818,
-		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/03/Dzierzoniow-Staszica.pdf"
-	},
-	{
-		"city": "Dzierżoniów",
-		"name": "Staszica",
 		"id": "121",
-		"lat": 50.720207,
-		"lon": 16.65726,
+		"lat": 50.720577,
+		"lon": 16.658020,
 		"href": "https://zpgsa.bielawa.pl/wp-content/uploads/2025/03/Dzierzoniow-Staszica.pdf"
 	},
 	{

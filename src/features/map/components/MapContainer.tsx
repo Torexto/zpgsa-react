@@ -73,6 +73,10 @@ export function MapContainer() {
   };
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
+    const features = event.target.queryRenderedFeatures(event.point);
+    if (features.length > 0) {
+      console.log(features[0].geometry.coordinates);
+    }
     handleMapMouseEvent(event, mapClickHandlers.value);
     if (!getMarker(event)) {
       currentBusId.value = null;
