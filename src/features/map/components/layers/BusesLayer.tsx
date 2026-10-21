@@ -8,6 +8,7 @@ import {
   Popup,
   Source,
 } from "@vis.gl/react-maplibre";
+import { useWindowSize } from "react-use";
 import { getBusesQueryOptions } from "@/features/map/api";
 import { mapStyle } from "@/features/map/components/MapContainer.tsx";
 import type { Bus } from "@/features/map/types.ts";
@@ -42,7 +43,13 @@ function BusForegroundLayer() {
   );
 }
 
-function BusBackgroundLayer() {
+function BusBackgroundLayer({
+  currentBusId,
+}: {
+  currentBusId: Signal<string | null>;
+}) {
+  const isLightTheme = mapStyle.value.theme === "light";
+
   return (
     <Layer
       id="buses-marker-background"
@@ -50,19 +57,23 @@ function BusBackgroundLayer() {
       source="buses"
       paint={{
         "circle-color": [
-          "match",
-          ["get", "icon"],
-          "bus-late",
-          mapStyle.value.theme === "light" ? "#ff6600" : "#aa3300",
-          "bus-ahead",
-          mapStyle.value.theme === "light" ? "#ee0000" : "#990000",
-          "bus-on-time",
-          mapStyle.value.theme === "light" ? "#3388ee" : "#0050bb",
-          mapStyle.value.theme === "light" ? "#3388ee" : "#0050bb",
+          "case",
+          ["==", ["get", "id"], currentBusId.value ?? ""],
+          "#2caa32",
+          [
+            "match",
+            ["get", "icon"],
+            "bus-late",
+            isLightTheme ? "#ff6600" : "#aa3300",
+            "bus-ahead",
+            isLightTheme ? "#ee0000" : "#990000",
+            "bus-on-time",
+            isLightTheme ? "#3388ee" : "#0050bb",
+            isLightTheme ? "#3388ee" : "#0050bb",
+          ],
         ],
         "circle-radius": 16,
-        "circle-stroke-color":
-          mapStyle.value.theme === "light" ? "#ffffff" : "#777777",
+        "circle-stroke-color": isLightTheme ? "#ffffff" : "#777777",
         "circle-stroke-width": 1,
         "circle-opacity": 1,
       }}
@@ -75,33 +86,49 @@ interface BusPopupProps {
 }
 
 export function BusPopup({ currentBusId }: BusPopupProps) {
+  const { width } = useWindowSize();
   const { data: buses } = useQuery(getBusesQueryOptions());
 
   const bus = computed(() => {
     return buses?.find((bus) => bus.id === currentBusId.value) ?? null;
   });
 
-  if (!bus.value) {
+  if (!bus.value || !width) {
     return null;
   }
 
-  return (
-    <Popup
-      longitude={bus.value.lon}
-      latitude={bus.value.lat}
-      anchor="bottom"
-      offset={15}
-      onClose={() => (currentBusId.value = null)}
-      closeOnClick={false}
-    >
+  const content = (
+    <div>
       <div>
-        <div>
-          Linia {bus.value.line} | {bus.value.label}
-        </div>
-        <div>{bus.value.destination}</div>
-        <div>Odchyłka: {bus.value.deviation}</div>
+        Linia {bus.value.line} | {bus.value.label}
       </div>
-    </Popup>
+      <div>{bus.value.destination}</div>
+      <div>Odchyłka: {bus.value.deviation}</div>
+    </div>
+  );
+
+  if (width > 768) {
+    return (
+      <Popup
+        longitude={bus.value.lon}
+        latitude={bus.value.lat}
+        anchor="bottom"
+        offset={15}
+        onClose={() => (currentBusId.value = null)}
+        closeOnClick={false}
+      >
+        {content}
+      </Popup>
+    );
+  }
+
+  return (
+    <div className="w-full bg-gray-700 absolute bottom-0 left-0 p-3 text-gray-300 z-50 rounded-t-2xl text-[16px] flex flex-col gap-2">
+      <div className="flex justify-center">
+        <div className="bg-gray-300 w-1/3 h-1 rounded-full"></div>
+      </div>
+      {content}
+    </div>
   );
 }
 
@@ -178,7 +205,7 @@ export function BusesLayer({
         })),
       }}
     >
-      <BusBackgroundLayer />
+      <BusBackgroundLayer currentBusId={currentBusId} />
       <BusForegroundLayer />
       <BusTextLayer />
     </Source>
