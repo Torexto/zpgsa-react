@@ -6,13 +6,19 @@ import {
   Popup,
   Source,
 } from "@vis.gl/react-maplibre";
+import { useWindowSize } from "react-use";
 import { getStopInfoOptions, getStopsQueryOptions } from "@/features/map/api";
+import { BottomSheet } from "@/features/map/components/controls/BottomSheet.tsx";
 import { mapStyle } from "@/features/map/components/MapContainer.tsx";
 import type { Stop } from "@/features/map/types.ts";
 import type { HandlerRegistry } from "@/features/map/utils/map/event.ts";
 import filterStopInfo from "@/features/map/utils/map/filterStopDetails.ts";
 
-function StopsBackgroundLayer() {
+function StopsBackgroundLayer({
+  currentStop,
+}: {
+  currentStop: Signal<Stop | null>;
+}) {
   return (
     <Layer
       id="stops-marker-background"
@@ -28,7 +34,12 @@ function StopsBackgroundLayer() {
         "text-font": ["Noto Sans Regular"],
       }}
       paint={{
-        "text-color": mapStyle.value.theme === "light" ? "#1e90ff" : "#0060bb",
+        "text-color": [
+          "case",
+          ["==", ["get", "id"], currentStop.value?.id ?? ""],
+          "#2caa32",
+          mapStyle.value.theme === "light" ? "#1e90ff" : "#0060bb",
+        ],
       }}
     />
   );
@@ -58,15 +69,10 @@ function StopsForegroundLayer() {
 
 interface StopPopupProps {
   currentStop: Signal<Stop | null>;
-  mapClickHandlers: Signal<HandlerRegistry>;
-  mapSecondaryClickHandlers: Signal<HandlerRegistry>;
 }
 
-export function StopPopup({
-  currentStop,
-  mapClickHandlers,
-  mapSecondaryClickHandlers,
-}: StopPopupProps) {
+export function StopPopup({ currentStop }: StopPopupProps) {
+  const { width } = useWindowSize();
   const {
     data: stopInfoData,
     isPending,
@@ -81,33 +87,10 @@ export function StopPopup({
     return filterStopInfo(info ?? []);
   });
 
-  const handleStopClick = (feature: MapGeoJSONFeature) => {
-    currentStop.value = feature.properties as Stop;
-  };
-
-  const handleStopSecondaryClick = (feature: MapGeoJSONFeature) => {
-    const stop = feature.properties as Stop;
-    window.open(stop.href);
-  };
-
-  // Register click handler for stop markers
-  mapClickHandlers.value["stops-marker-background"] = handleStopClick;
-
-  // Register secondary click handler for stop markers
-  mapSecondaryClickHandlers.value["stops-marker-background"] =
-    handleStopSecondaryClick;
-
   if (!currentStop.value) return null;
 
-  return (
-    <Popup
-      longitude={currentStop.value.lon}
-      latitude={currentStop.value.lat}
-      anchor="bottom"
-      offset={15}
-      onClose={() => (currentStop.value = null)}
-      closeOnClick={false}
-    >
+  const content = (
+    <>
       <div className="text-center font-bold text-[16px] pb-2">
         {currentStop.value.city} {currentStop.value.name} (
         {currentStop.value.id})
@@ -124,12 +107,64 @@ export function StopPopup({
           </div>
         ))}
       </div>
-    </Popup>
+    </>
+  );
+
+  if (width > 768) {
+    return (
+      <Popup
+        longitude={currentStop.value.lon}
+        latitude={currentStop.value.lat}
+        anchor="bottom"
+        offset={15}
+        onClose={() => (currentStop.value = null)}
+        closeOnClick={false}
+      >
+        {content}
+      </Popup>
+    );
+  }
+
+  return (
+    <BottomSheet defaultHeight={400} minHeight={200} maxHeight={800}>
+      {content}
+    </BottomSheet>
   );
 }
 
-export function StopsLayer() {
+interface StopLayerProps {
+  currentStop: Signal<Stop | null>;
+  mapClickHandlers: Signal<HandlerRegistry>;
+  mapSecondaryClickHandlers: Signal<HandlerRegistry>;
+}
+
+export function StopsLayer({
+  currentStop,
+  mapClickHandlers,
+  mapSecondaryClickHandlers,
+}: StopLayerProps) {
   const { data } = useQuery(getStopsQueryOptions());
+
+  const handleStopClick = (feature: MapGeoJSONFeature) => {
+    const stop = feature.properties as Stop;
+    if (currentStop.value?.id === stop.id) {
+      currentStop.value = null;
+      return;
+    }
+    currentStop.value = stop;
+  };
+
+  const handleStopSecondaryClick = (feature: MapGeoJSONFeature) => {
+    const stop = feature.properties as Stop;
+    window.open(stop.href);
+  };
+
+  // Register click handler for stop markers
+  mapClickHandlers.value["stops-marker-background"] = handleStopClick;
+
+  // Register secondary click handler for stop markers
+  mapSecondaryClickHandlers.value["stops-marker-background"] =
+    handleStopSecondaryClick;
 
   const stopsDataFeature = {
     type: "FeatureCollection",
@@ -152,7 +187,7 @@ export function StopsLayer() {
       clusterMaxZoom={14}
       clusterRadius={30}
     >
-      <StopsBackgroundLayer />
+      <StopsBackgroundLayer currentStop={currentStop} />
       <StopsForegroundLayer />
     </Source>
   );

@@ -133,7 +133,11 @@ export function MapContainer() {
         {/*<Layer id="osm-layer" type="raster" />*/}
       </Source>
 
-      <StopsLayer />
+      <StopsLayer
+        currentStop={currentStop}
+        mapClickHandlers={mapClickHandlers}
+        mapSecondaryClickHandlers={mapSecondaryClickHandlers}
+      />
 
       <BusesLayer
         mapClickHandlers={mapClickHandlers}
@@ -146,11 +150,7 @@ export function MapContainer() {
 
       <RouteLayer currentRouteBusId={currentRouteBusId} />
 
-      <StopPopup
-        currentStop={currentStop}
-        mapClickHandlers={mapClickHandlers}
-        mapSecondaryClickHandlers={mapSecondaryClickHandlers}
-      />
+      <StopPopup currentStop={currentStop} />
 
       <BusPopup currentBusId={currentBusId} />
 

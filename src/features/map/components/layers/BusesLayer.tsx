@@ -10,6 +10,7 @@ import {
 } from "@vis.gl/react-maplibre";
 import { useWindowSize } from "react-use";
 import { getBusesQueryOptions } from "@/features/map/api";
+import { BottomSheet } from "@/features/map/components/controls/BottomSheet.tsx";
 import { mapStyle } from "@/features/map/components/MapContainer.tsx";
 import type { Bus } from "@/features/map/types.ts";
 import type {
@@ -123,12 +124,14 @@ export function BusPopup({ currentBusId }: BusPopupProps) {
   }
 
   return (
-    <div className="w-full bg-gray-700 absolute bottom-0 left-0 p-3 text-gray-300 z-50 rounded-t-2xl text-[16px] flex flex-col gap-2">
-      <div className="flex justify-center">
-        <div className="bg-gray-300 w-1/3 h-1 rounded-full"></div>
-      </div>
+    <BottomSheet
+      defaultHeight={150}
+      minHeight={150}
+      maxHeight={250}
+      open={!!bus.value}
+    >
       {content}
-    </div>
+    </BottomSheet>
   );
 }
 
@@ -174,6 +177,10 @@ export function BusesLayer({
 
   const handleBusClick = (feature: MapGeoJSONFeature) => {
     const bus = feature.properties as Bus;
+    if (currentBusId.value === bus.id) {
+      currentBusId.value = null;
+      return;
+    }
     currentBusId.value = bus.id;
   };
 
